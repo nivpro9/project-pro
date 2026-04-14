@@ -30,6 +30,8 @@ async function initDB() {
       id TEXT PRIMARY KEY,
       counter INTEGER,
       worker_name TEXT,
+      worker_number TEXT DEFAULT '',
+      passport_number TEXT DEFAULT '',
       worker_phone TEXT,
       room TEXT,
       category TEXT,
@@ -55,9 +57,16 @@ async function initDB() {
   `);
 
   // Add new columns if upgrading from old schema
-  const cols = ['assigned_to','in_progress_by','in_progress_at','resolved_by','resolved_at'];
-  for (const col of cols) {
-    const type = col.endsWith('_at') ? 'BIGINT DEFAULT 0' : 'TEXT DEFAULT \'\'';
+  const cols = [
+    ['assigned_to',     "TEXT DEFAULT ''"],
+    ['in_progress_by',  "TEXT DEFAULT ''"],
+    ['in_progress_at',  'BIGINT DEFAULT 0'],
+    ['resolved_by',     "TEXT DEFAULT ''"],
+    ['resolved_at',     'BIGINT DEFAULT 0'],
+    ['worker_number',   "TEXT DEFAULT ''"],
+    ['passport_number', "TEXT DEFAULT ''"],
+  ];
+  for (const [col, type] of cols) {
     await pool.query(`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ${col} ${type}`).catch(()=>{});
   }
 
@@ -78,19 +87,22 @@ app.post('/api/tickets', async (req, res) => {
 
     await pool.query(
       `INSERT INTO tickets
-        (id, counter, worker_name, worker_phone, room, category, priority,
-         description, media_base64, media_type, status, notes,
-         created_at, updated_at, assigned_to, in_progress_by, in_progress_at, resolved_by, resolved_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'new','',$11,$11,'',0,0,'',0)`,
+        (id, counter, worker_name, worker_number, passport_number, worker_phone,
+         room, category, priority, description, media_base64, media_type,
+         status, notes, created_at, updated_at,
+         assigned_to, in_progress_by, in_progress_at, resolved_by, resolved_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'new','',$13,$13,'',0,0,'',0)`,
       [id, num,
-       req.body.workerName  || '',
-       req.body.workerPhone || '',
-       req.body.room        || '',
-       req.body.category    || '',
-       req.body.priority    || 'regular',
-       req.body.description || '',
-       req.body.mediaBase64 || '',
-       req.body.mediaType   || '',
+       req.body.workerName    || '',
+       req.body.workerNumber  || '',
+       req.body.passportNumber|| '',
+       req.body.workerPhone   || '',
+       req.body.room          || '',
+       req.body.category      || '',
+       req.body.priority      || 'regular',
+       req.body.description   || '',
+       req.body.mediaBase64   || '',
+       req.body.mediaType     || '',
        now]
     );
     res.json({ success: true, id });
@@ -105,10 +117,12 @@ app.get('/api/tickets', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM tickets ORDER BY created_at DESC');
     const tickets = result.rows.map(r => ({
-      id:            r.id,
-      workerName:    r.worker_name,
-      workerPhone:   r.worker_phone,
-      room:          r.room,
+      id:             r.id,
+      workerName:     r.worker_name,
+      workerNumber:   r.worker_number    || '',
+      passportNumber: r.passport_number  || '',
+      workerPhone:    r.worker_phone,
+      room:           r.room,
       category:      r.category,
       priority:      r.priority,
       description:   r.description,
