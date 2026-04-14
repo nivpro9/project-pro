@@ -59,6 +59,12 @@
   #mediaPreview img,#mediaPreview video{max-width:100%;max-height:220px;border-radius:8px;display:block;margin:0 auto}
   #removeMedia{margin-top:8px;background:none;border:1px solid #ef4444;color:#ef4444;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600}
 
+  /* Clothing checkboxes */
+  .clothing-item{background:#f9fafb;border:2px solid #e5e7eb;border-radius:10px;padding:12px 14px;transition:border-color .2s}
+  .clothing-item:has(input:checked){border-color:#e85d04;background:#fff5f0}
+  .clothing-check{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.95rem;font-weight:600;color:#333}
+  .clothing-check input[type=checkbox]{width:18px;height:18px;accent-color:#e85d04;cursor:pointer}
+
   /* Submit */
   #submitBtn{width:100%;background:#e85d04;color:#fff;border:none;padding:16px;border-radius:12px;font-size:1.1rem;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:background .2s;margin-top:4px}
   #submitBtn:hover{background:#c44c00}
@@ -133,9 +139,29 @@
 
     <!-- Sub: Clothing -->
     <div id="sub-clothing" class="sub-cats" style="display:none">
-      <div style="font-size:.75rem;color:#888;margin:12px 0 8px;font-weight:700">Select request type:</div>
-      <div class="cat-grid">
-        <button class="cat-btn sub-btn" data-cat="Clothing Request" onclick="selectCat(this)">👕 Clothing Request</button>
+      <div style="font-size:.75rem;color:#888;margin:12px 0 8px;font-weight:700">Clothing Request — select items:</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="clothing-item" id="item-pants">
+          <label class="clothing-check">
+            <input type="checkbox" id="chk-pants" onchange="toggleClothingItem('pants')"/>
+            <span>👖 Pants</span>
+          </label>
+          <input type="text" id="size-pants" placeholder="Size (e.g. 32, M, L)" style="display:none;margin-top:6px"/>
+        </div>
+        <div class="clothing-item" id="item-shirt">
+          <label class="clothing-check">
+            <input type="checkbox" id="chk-shirt" onchange="toggleClothingItem('shirt')"/>
+            <span>👕 Shirt</span>
+          </label>
+          <input type="text" id="size-shirt" placeholder="Size (e.g. M, L, XL)" style="display:none;margin-top:6px"/>
+        </div>
+        <div class="clothing-item" id="item-shoes">
+          <label class="clothing-check">
+            <input type="checkbox" id="chk-shoes" onchange="toggleClothingItem('shoes')"/>
+            <span>👟 Shoes</span>
+          </label>
+          <input type="text" id="size-shoes" placeholder="Size (e.g. 42, 43)" style="display:none;margin-top:6px"/>
+        </div>
       </div>
     </div>
 
@@ -160,22 +186,6 @@
     </div>
   </div>
 
-  <!-- Clothing sizes (shown only when Clothing Request selected) -->
-  <div class="card" id="clothingCard" style="display:none">
-    <h3>Clothing Sizes</h3>
-    <div class="field">
-      <label>Pants Size</label>
-      <input type="text" id="pantSize" placeholder="e.g. 32, M, L, XL"/>
-    </div>
-    <div class="field">
-      <label>Shirt Size</label>
-      <input type="text" id="shirtSize" placeholder="e.g. M, L, XL, XXL"/>
-    </div>
-    <div class="field" style="margin-bottom:0">
-      <label>2nd Shirt Size</label>
-      <input type="text" id="shirt2Size" placeholder="e.g. M, L, XL, XXL"/>
-    </div>
-  </div>
 
   <!-- Section 3: Priority -->
   <div class="card">
@@ -219,21 +229,41 @@ let mediaType = '';
 function selectMain(btn) {
   document.querySelectorAll('#mainCatGrid .cat-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
-  // hide all sub menus and reset sub selection
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('clothingCard').style.display = 'none';
   selectedCategory = '';
-  // show relevant sub menu
   const sub = document.getElementById('sub-' + btn.dataset.main);
   if (sub) sub.style.display = 'block';
+  // if clothing — set category automatically
+  if (btn.dataset.main === 'clothing') selectedCategory = 'Clothing Request';
 }
 
 function selectCat(btn) {
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedCategory = btn.dataset.cat;
-  document.getElementById('clothingCard').style.display = selectedCategory === 'בקשת בגדים' ? 'block' : 'none';
+}
+
+function toggleClothingItem(item) {
+  const sizeInput = document.getElementById('size-' + item);
+  const checked = document.getElementById('chk-' + item).checked;
+  sizeInput.style.display = checked ? 'block' : 'none';
+  if (!checked) sizeInput.value = '';
+}
+
+function buildClothingDesc(extra) {
+  const items = [
+    { id: 'pants', label: 'Pants' },
+    { id: 'shirt', label: 'Shirt' },
+    { id: 'shoes', label: 'Shoes' }
+  ];
+  const lines = items
+    .filter(i => document.getElementById('chk-' + i.id).checked)
+    .map(i => {
+      const size = document.getElementById('size-' + i.id).value.trim();
+      return `${i.label}: ${size || '—'}`;
+    });
+  return lines.join(' | ') + (extra ? '\n\n' + extra : '');
 }
 
 function selectPri(p) {
@@ -306,7 +336,7 @@ async function submitForm() {
         category: selectedCategory,
         priority: selectedPriority,
         description: selectedCategory === 'Clothing Request'
-          ? `Pants: ${document.getElementById('pantSize').value.trim() || '—'} | Shirt: ${document.getElementById('shirtSize').value.trim() || '—'} | 2nd Shirt: ${document.getElementById('shirt2Size').value.trim() || '—'}\n\n${desc}`
+          ? buildClothingDesc(desc)
           : desc,
         mediaBase64,
         mediaType
@@ -333,12 +363,13 @@ function resetForm() {
   document.getElementById('workerPhone').value = '';
   document.getElementById('room').value = '';
   document.getElementById('description').value = '';
-  document.getElementById('pantSize').value = '';
-  document.getElementById('shirtSize').value = '';
-  document.getElementById('shirt2Size').value = '';
+  ['pants','shirt','shoes'].forEach(item => {
+    document.getElementById('chk-' + item).checked = false;
+    document.getElementById('size-' + item).value = '';
+    document.getElementById('size-' + item).style.display = 'none';
+  });
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
-  document.getElementById('clothingCard').style.display = 'none';
   document.getElementById('priUrgent').classList.remove('selected');
   document.getElementById('priRegular').classList.remove('selected');
   selectedCategory = '';
