@@ -8,27 +8,48 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f2f5;min-height:100vh}
 
-  /* PIN screen */
-  #pinScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-  #pinScreen .lock{font-size:3.5rem;margin-bottom:16px}
-  #pinScreen h2{color:#16213e;font-size:1.4rem;margin-bottom:6px}
-  #pinScreen p{color:#888;font-size:.9rem;margin-bottom:24px}
+  /* ── Login screens ── */
+  .login-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .login-screen.active{display:flex}
+  .login-screen .lock{font-size:3.5rem;margin-bottom:16px}
+  .login-screen h2{color:#16213e;font-size:1.4rem;margin-bottom:6px}
+  .login-screen p{color:#888;font-size:.9rem;margin-bottom:24px;text-align:center}
+
+  /* User selection */
+  .user-buttons{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+  .user-btn{width:160px;padding:22px 10px;border:3px solid #e5e7eb;border-radius:14px;background:#fff;cursor:pointer;transition:all .2s;text-align:center}
+  .user-btn:hover{border-color:#e85d04;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+  .user-btn .user-avatar{font-size:2.8rem;margin-bottom:8px}
+  .user-btn .user-name{font-size:1rem;font-weight:800;color:#16213e}
+  .user-btn .user-role{font-size:.75rem;color:#888;margin-top:2px}
+  .user-btn.test-btn{border-style:dashed;border-color:#d1d5db;opacity:.75}
+  .user-btn.test-btn:hover{border-color:#f97316;opacity:1}
+  .user-btn.test-btn .user-name{color:#f97316}
+  .user-btn.test-btn .user-role{color:#f97316;opacity:.7}
+
+  /* PIN */
   #pinInput{border:2px solid #e5e7eb;border-radius:10px;padding:14px 20px;font-size:1.6rem;text-align:center;letter-spacing:8px;width:200px;outline:none;transition:border-color .2s}
   #pinInput:focus{border-color:#e85d04}
   #pinBtn{margin-top:14px;background:#e85d04;color:#fff;border:none;padding:13px 40px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;width:200px}
   #pinBtn:hover{background:#c44c00}
   #pinError{color:#ef4444;font-size:.85rem;margin-top:10px;min-height:20px}
+  #backToUsers{background:none;border:none;color:#888;font-size:.85rem;cursor:pointer;margin-top:12px;text-decoration:underline}
+  #backToUsers:hover{color:#e85d04}
 
-  /* Header */
+  /* ── Header ── */
   header{background:#16213e;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
   header .logo-titles{display:flex;align-items:center;gap:14px}
   header .titles{color:#fff}
   header .titles h1{font-size:1.1rem;font-weight:700}
   header .titles p{font-size:.75rem;color:#aab}
+  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  #currentUserBadge{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:6px 14px;border-radius:7px;font-size:.85rem;font-weight:700}
+  #exportBtn{background:#22c55e;color:#fff;border:none;padding:7px 16px;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600}
+  #exportBtn:hover{background:#16a34a}
   #logoutBtn{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);padding:7px 16px;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600}
   #logoutBtn:hover{background:rgba(255,255,255,.2)}
 
-  /* Dashboard */
+  /* ── Dashboard ── */
   #dashboard{display:none}
   .dash-body{max-width:900px;margin:0 auto;padding:20px 16px 60px}
 
@@ -61,8 +82,9 @@
   .badge.new{background:#eff6ff;color:#3b82f6}
   .badge.in-progress{background:#fff7ed;color:#f97316}
   .badge.resolved{background:#f0fdf4;color:#22c55e}
-  .tc-meta{font-size:.82rem;color:#555;margin-bottom:6px}
+  .tc-meta{font-size:.82rem;color:#555;margin-bottom:4px}
   .tc-meta strong{color:#222}
+  .tc-handler{font-size:.78rem;color:#e85d04;font-weight:600;margin-bottom:4px}
   .tc-desc{font-size:.83rem;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
   .tc-time{font-size:.75rem;color:#bbb;margin-top:6px}
 
@@ -83,28 +105,36 @@
   #closeModal{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;line-height:1;padding:0 4px}
   .modal-body{padding:20px}
   .detail-row{display:flex;gap:8px;margin-bottom:10px;font-size:.88rem;flex-wrap:wrap}
-  .detail-row .lbl{font-weight:700;color:#555;min-width:110px}
+  .detail-row .lbl{font-weight:700;color:#555;min-width:120px}
   .detail-row .val{color:#222}
   .detail-row .val a{color:#e85d04;text-decoration:none}
   .modal-media{margin:14px 0}
   .modal-media img{max-width:100%;border-radius:8px;cursor:pointer}
   .modal-media video{max-width:100%;border-radius:8px}
   .modal-media a{display:inline-block;margin-top:8px;font-size:.82rem;color:#e85d04;font-weight:600}
-  .status-row{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}
+  .section-label{font-size:.72rem;font-weight:800;letter-spacing:1.2px;color:#888;text-transform:uppercase;margin:16px 0 8px}
+  .status-row{display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap}
   .status-btn{border:2px solid #e5e7eb;background:#f9fafb;border-radius:8px;padding:9px 18px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s}
   .status-btn:hover{border-color:#888}
   .status-btn.active-new{border-color:#3b82f6;background:#eff6ff;color:#3b82f6}
   .status-btn.active-inprog{border-color:#f97316;background:#fff7ed;color:#f97316}
   .status-btn.active-resolved{border-color:#22c55e;background:#f0fdf4;color:#22c55e}
+
+  /* Handler assignment */
+  .assign-row{display:flex;gap:10px;margin:8px 0;flex-wrap:wrap}
+  .assign-btn{border:2px solid #e5e7eb;background:#f9fafb;border-radius:8px;padding:9px 20px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+  .assign-btn:hover{border-color:#e85d04;color:#e85d04}
+  .assign-btn.active{border-color:#e85d04;background:#fff4ef;color:#e85d04}
+  .handler-info{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;font-size:.83rem;color:#555;margin-top:8px}
+  .handler-info .handler-row{display:flex;gap:8px;margin-bottom:4px}
+  .handler-info .handler-row:last-child{margin-bottom:0}
+  .handler-info .h-lbl{font-weight:700;color:#888;min-width:110px}
+  .handler-info .h-val{color:#222}
+
   .notes-area{width:100%;border:2px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:.88rem;font-family:inherit;min-height:90px;resize:vertical;outline:none}
   .notes-area:focus{border-color:#e85d04}
   #saveNotes{background:#16213e;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:.88rem;font-weight:700;cursor:pointer;margin-top:8px}
   #saveNotes:hover{background:#0f3460}
-  .section-label{font-size:.72rem;font-weight:800;letter-spacing:1.2px;color:#888;text-transform:uppercase;margin:16px 0 8px}
-
-  /* Export button */
-  #exportBtn{background:#22c55e;color:#fff;border:none;padding:7px 16px;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600}
-  #exportBtn:hover{background:#16a34a}
 
   /* Export modal */
   #exportOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:20px}
@@ -125,17 +155,42 @@
 
 <div id="toast"></div>
 
-<!-- PIN Screen -->
-<div id="pinScreen">
+<!-- ── SCREEN 1: Choose User ── -->
+<div class="login-screen active" id="userScreen">
+  <div class="lock">👷</div>
+  <h2>Who are you?</h2>
+  <p>Select your name to continue</p>
+  <div class="user-buttons">
+    <div class="user-btn" onclick="selectUser('Hannoch')">
+      <div class="user-avatar">👤</div>
+      <div class="user-name">Hannoch</div>
+      <div class="user-role">Logistics Manager</div>
+    </div>
+    <div class="user-btn" onclick="selectUser('Aharon')">
+      <div class="user-avatar">👤</div>
+      <div class="user-name">Aharon</div>
+      <div class="user-role">Logistics Manager</div>
+    </div>
+    <div class="user-btn test-btn" onclick="selectUser('Test')">
+      <div class="user-avatar">🧪</div>
+      <div class="user-name">Test</div>
+      <div class="user-role">System Testing</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCREEN 2: PIN ── -->
+<div class="login-screen" id="pinScreen">
   <div class="lock">🔒</div>
-  <h2>Manager Access</h2>
-  <p>Enter your PIN to continue</p>
+  <h2 id="pinTitle">Enter PIN</h2>
+  <p id="pinSubtitle">Enter your personal PIN to continue</p>
   <input type="password" id="pinInput" maxlength="4" placeholder="••••" inputmode="numeric" onkeydown="if(event.key==='Enter')checkPin()"/>
   <button id="pinBtn" onclick="checkPin()">Unlock</button>
   <div id="pinError"></div>
+  <button id="backToUsers" onclick="goBack()">← Choose a different user</button>
 </div>
 
-<!-- Dashboard -->
+<!-- ── DASHBOARD ── -->
 <div id="dashboard">
   <header>
     <div class="logo-titles">
@@ -155,7 +210,8 @@
         <p>Logistics control panel</p>
       </div>
     </div>
-    <div style="display:flex;gap:8px">
+    <div class="header-right">
+      <span id="currentUserBadge">👤 —</span>
       <button id="exportBtn" onclick="openExport()">📊 Export to Excel</button>
       <button id="logoutBtn" onclick="logout()">🔒 Logout</button>
     </div>
@@ -183,7 +239,7 @@
   </div>
 </div>
 
-<!-- Export Modal -->
+<!-- ── Export Modal ── -->
 <div id="exportOverlay" onclick="if(event.target===this)closeExport()">
   <div id="exportModal">
     <div class="modal-header">
@@ -207,7 +263,7 @@
   </div>
 </div>
 
-<!-- Detail Modal -->
+<!-- ── Detail Modal ── -->
 <div id="modalOverlay" onclick="handleOverlayClick(event)">
   <div id="modal">
     <div class="modal-header">
@@ -219,19 +275,45 @@
 </div>
 
 <script>
-const CORRECT_PIN = '1234';
-let allTickets = [];
+// ── User / PIN config ─────────────────────────────────
+const USERS = {
+  Hannoch: { pin: '1234', emoji: '👤' },
+  Aharon:  { pin: '1212', emoji: '👤' },
+  Test:    { pin: '1111', emoji: '🧪' }
+};
+
+let currentUser = null;
+let allTickets  = [];
 let currentFilter = 'all';
 let currentTicketId = null;
 let prevCount = -1;
-let audioCtx = null;
+let audioCtx  = null;
+let pollInterval;
 
-// ── PIN ──────────────────────────────────────────────
+// ── Login flow ────────────────────────────────────────
+function selectUser(name) {
+  currentUser = name;
+  document.getElementById('pinTitle').textContent    = `Hello, ${name}!`;
+  document.getElementById('pinSubtitle').textContent = 'Enter your PIN to continue';
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent    = '';
+  document.getElementById('userScreen').classList.remove('active');
+  document.getElementById('pinScreen').classList.add('active');
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+
+function goBack() {
+  currentUser = null;
+  document.getElementById('pinScreen').classList.remove('active');
+  document.getElementById('userScreen').classList.add('active');
+}
+
 function checkPin() {
   const val = document.getElementById('pinInput').value;
-  if (val === CORRECT_PIN) {
-    document.getElementById('pinScreen').style.display = 'none';
+  if (currentUser && val === USERS[currentUser].pin) {
+    document.getElementById('pinScreen').classList.remove('active');
     document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('currentUserBadge').textContent = `${USERS[currentUser].emoji} ${currentUser}`;
     startPolling();
   } else {
     document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
@@ -240,11 +322,11 @@ function checkPin() {
 }
 
 function logout() {
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('pinScreen').style.display = 'flex';
-  document.getElementById('pinInput').value = '';
-  document.getElementById('pinError').textContent = '';
   clearInterval(pollInterval);
+  currentUser = null;
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('pinScreen').classList.remove('active');
+  document.getElementById('userScreen').classList.add('active');
 }
 
 // ── Toast ─────────────────────────────────────────────
@@ -269,13 +351,27 @@ function playBeep() {
   } catch {}
 }
 
-// ── Time ago ──────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────
 function timeAgo(ts) {
+  if (!ts) return '—';
   const s = Math.floor((Date.now() - ts) / 1000);
   if (s < 60) return 'just now';
   if (s < 3600) return Math.floor(s/60) + 'm ago';
   if (s < 86400) return Math.floor(s/3600) + 'h ago';
   return Math.floor(s/86400) + 'd ago';
+}
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleString();
+}
+
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function statusLabel(s) {
+  return s === 'new' ? '🔵 New' : s === 'in-progress' ? '🟡 In Progress' : '✅ Resolved';
 }
 
 // ── Fetch & render ────────────────────────────────────
@@ -284,12 +380,10 @@ async function fetchTickets() {
     const res = await fetch('/api/tickets');
     allTickets = await res.json();
 
-    // Stats
-    document.getElementById('countNew').textContent = allTickets.filter(t=>t.status==='new').length;
-    document.getElementById('countInProg').textContent = allTickets.filter(t=>t.status==='in-progress').length;
+    document.getElementById('countNew').textContent      = allTickets.filter(t=>t.status==='new').length;
+    document.getElementById('countInProg').textContent   = allTickets.filter(t=>t.status==='in-progress').length;
     document.getElementById('countResolved').textContent = allTickets.filter(t=>t.status==='resolved').length;
 
-    // New ticket notification
     if (prevCount >= 0 && allTickets.length > prevCount) {
       playBeep();
       showToast('🔔 New request received!');
@@ -302,8 +396,8 @@ async function fetchTickets() {
 
 function renderTickets() {
   let list = allTickets;
-  if (currentFilter === 'urgent') list = list.filter(t => t.priority === 'urgent');
-  else if (currentFilter !== 'all') list = list.filter(t => t.status === currentFilter);
+  if (currentFilter === 'urgent')       list = list.filter(t => t.priority === 'urgent');
+  else if (currentFilter !== 'all')     list = list.filter(t => t.status === currentFilter);
 
   const el = document.getElementById('ticketList');
   if (!list.length) {
@@ -311,26 +405,26 @@ function renderTickets() {
     return;
   }
 
-  el.innerHTML = list.map(t => `
-    <div class="ticket-card ${t.priority}" onclick="openModal('${t.id}')">
-      <div class="tc-top">
-        <span class="tc-id">${t.id}</span>
-        <span class="badge ${t.priority}">${t.priority === 'urgent' ? '🔴 Urgent' : '🟢 Regular'}</span>
-        <span class="badge ${t.status}">${statusLabel(t.status)}</span>
+  el.innerHTML = list.map(t => {
+    let handlerLine = '';
+    if (t.assignedTo)   handlerLine = `<div class="tc-handler">👷 Assigned to: ${esc(t.assignedTo)}</div>`;
+    if (t.inProgressBy) handlerLine = `<div class="tc-handler">🔧 Handled by: ${esc(t.inProgressBy)}</div>`;
+    if (t.resolvedBy)   handlerLine = `<div class="tc-handler">✅ Resolved by: ${esc(t.resolvedBy)}</div>`;
+
+    return `
+      <div class="ticket-card ${t.priority}" onclick="openModal('${t.id}')">
+        <div class="tc-top">
+          <span class="tc-id">${t.id}</span>
+          <span class="badge ${t.priority}">${t.priority === 'urgent' ? '🔴 Urgent' : '🟢 Regular'}</span>
+          <span class="badge ${t.status}">${statusLabel(t.status)}</span>
+        </div>
+        <div class="tc-meta"><strong>${esc(t.workerName)}</strong> &nbsp;·&nbsp; ${esc(t.room)} &nbsp;·&nbsp; ${esc(t.category)}</div>
+        ${handlerLine}
+        <div class="tc-desc">${esc(t.description)}</div>
+        <div class="tc-time">${timeAgo(t.createdAt)}</div>
       </div>
-      <div class="tc-meta"><strong>${esc(t.workerName)}</strong> &nbsp;·&nbsp; ${esc(t.room)} &nbsp;·&nbsp; ${esc(t.category)}</div>
-      <div class="tc-desc">${esc(t.description)}</div>
-      <div class="tc-time">${timeAgo(t.createdAt)}</div>
-    </div>
-  `).join('');
-}
-
-function statusLabel(s) {
-  return s === 'new' ? '🔵 New' : s === 'in-progress' ? '🟡 In Progress' : '✅ Resolved';
-}
-
-function esc(str) {
-  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    `;
+  }).join('');
 }
 
 function setFilter(btn) {
@@ -348,6 +442,7 @@ function openModal(id) {
 
   document.getElementById('modalTitle').textContent = `Ticket ${t.id}`;
 
+  // Media
   let mediaHtml = '';
   if (t.mediaBase64) {
     if (t.mediaType && t.mediaType.startsWith('image/')) {
@@ -367,21 +462,52 @@ function openModal(id) {
     }
   }
 
+  // Handler history
+  let handlerHistory = '';
+  if (t.assignedTo || t.inProgressBy || t.resolvedBy) {
+    handlerHistory = `<div class="handler-info">`;
+    if (t.assignedTo)   handlerHistory += `<div class="handler-row"><span class="h-lbl">📋 Assigned to:</span><span class="h-val">${esc(t.assignedTo)}</span></div>`;
+    if (t.inProgressBy) handlerHistory += `<div class="handler-row"><span class="h-lbl">🔧 In Progress by:</span><span class="h-val">${esc(t.inProgressBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.inProgressAt)}</span></span></div>`;
+    if (t.resolvedBy)   handlerHistory += `<div class="handler-row"><span class="h-lbl">✅ Resolved by:</span><span class="h-val">${esc(t.resolvedBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.resolvedAt)}</span></span></div>`;
+    handlerHistory += `</div>`;
+  }
+
+  // Assign buttons (highlight current assignment)
+  const assignedTo = t.assignedTo || '';
+  const chanochActive = assignedTo === 'Hannoch' ? 'active' : '';
+  const aharonActive  = assignedTo === 'Aharon'  ? 'active' : '';
+  const isTest = currentUser === 'Test';
+
   document.getElementById('modalBody').innerHTML = `
     <div class="detail-row"><span class="lbl">Worker</span><span class="val">${esc(t.workerName)}</span></div>
+    <div class="detail-row"><span class="lbl">Worker Number</span><span class="val">${esc(t.workerNumber||'—')}</span></div>
+    <div class="detail-row"><span class="lbl">Passport</span><span class="val">${esc(t.passportNumber||'—')}</span></div>
     <div class="detail-row"><span class="lbl">Phone</span><span class="val"><a href="tel:${esc(t.workerPhone)}">${esc(t.workerPhone)||'—'}</a></span></div>
     <div class="detail-row"><span class="lbl">Room / Location</span><span class="val">${esc(t.room)}</span></div>
     <div class="detail-row"><span class="lbl">Category</span><span class="val">${esc(t.category)}</span></div>
     <div class="detail-row"><span class="lbl">Priority</span><span class="val">${t.priority === 'urgent' ? '🔴 Urgent' : '🟢 Regular'}</span></div>
-    <div class="detail-row"><span class="lbl">Submitted</span><span class="val">${new Date(t.createdAt).toLocaleString()}</span></div>
+    <div class="detail-row"><span class="lbl">Submitted</span><span class="val">${fmtDate(t.createdAt)}</span></div>
     <div class="detail-row" style="flex-direction:column"><span class="lbl" style="margin-bottom:4px">Description</span><span class="val" style="white-space:pre-wrap">${esc(t.description)}</span></div>
     ${mediaHtml}
+
+    <div class="section-label">Who is handling this?</div>
+    <div class="assign-row">
+      <button class="assign-btn ${chanochActive}" onclick="assignTicket('Hannoch')">👤 Hannoch</button>
+      <button class="assign-btn ${aharonActive}"  onclick="assignTicket('Aharon')">👤 Aharon</button>
+      <button class="assign-btn" onclick="assignTicket('')" style="color:#aaa">✕ Unassign</button>
+    </div>
+    ${isTest ? '<p style="font-size:.78rem;color:#f97316;margin-top:-6px;margin-bottom:4px">🧪 Test mode — status changes will be marked as "Test"</p>' : ''}
+
     <div class="section-label">Status</div>
     <div class="status-row">
       <button class="status-btn ${t.status==='new'?'active-new':''}" onclick="updateStatus('new')">🔵 New</button>
       <button class="status-btn ${t.status==='in-progress'?'active-inprog':''}" onclick="updateStatus('in-progress')">🟡 In Progress</button>
       <button class="status-btn ${t.status==='resolved'?'active-resolved':''}" onclick="updateStatus('resolved')">✅ Resolved</button>
     </div>
+
+    <div class="section-label">Handler History</div>
+    ${handlerHistory || '<p style="font-size:.82rem;color:#aaa;margin-bottom:12px">No handler assigned yet.</p>'}
+
     <div class="section-label">Manager Notes</div>
     <textarea class="notes-area" id="notesArea" placeholder="Add notes here…">${esc(t.notes)}</textarea>
     <button id="saveNotes" onclick="saveNotes()">💾 Save Notes</button>
@@ -399,12 +525,24 @@ function handleOverlayClick(e) {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 }
 
+async function assignTicket(user) {
+  if (!currentTicketId) return;
+  await fetch(`/api/tickets/${currentTicketId}`, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ assignedTo: user })
+  });
+  await fetchTickets();
+  openModal(currentTicketId);
+  showToast(user ? `Assigned to ${user}` : 'Unassigned');
+}
+
 async function updateStatus(status) {
   if (!currentTicketId) return;
   await fetch(`/api/tickets/${currentTicketId}`, {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ status })
+    body: JSON.stringify({ status, handledBy: currentUser })
   });
   await fetchTickets();
   openModal(currentTicketId);
@@ -424,7 +562,6 @@ async function saveNotes() {
 }
 
 // ── Polling ───────────────────────────────────────────
-let pollInterval;
 function startPolling() {
   fetchTickets();
   pollInterval = setInterval(fetchTickets, 5000);
@@ -432,10 +569,9 @@ function startPolling() {
 
 // ── Export to Excel ───────────────────────────────────
 function openExport() {
-  // default: from = 30 days ago, to = today
   const today = new Date();
-  const from = new Date(today); from.setDate(from.getDate() - 30);
-  document.getElementById('exportTo').value = today.toISOString().split('T')[0];
+  const from  = new Date(today); from.setDate(from.getDate() - 30);
+  document.getElementById('exportTo').value   = today.toISOString().split('T')[0];
   document.getElementById('exportFrom').value = from.toISOString().split('T')[0];
   document.getElementById('exportOverlay').classList.add('open');
 }
@@ -446,7 +582,7 @@ function closeExport() {
 
 function doExport() {
   const fromVal = document.getElementById('exportFrom').value;
-  const toVal = document.getElementById('exportTo').value;
+  const toVal   = document.getElementById('exportTo').value;
 
   let tickets = [...allTickets];
 
@@ -461,28 +597,42 @@ function doExport() {
 
   if (!tickets.length) { showToast('No tickets in selected date range'); return; }
 
-  // Build CSV
-  const headers = ['ID','Worker Name','Phone','Room','Category','Priority','Status','Description','Notes','Created At','Updated At'];
+  const headers = [
+    'ID','Worker Name','Worker Number','Passport Number','Phone',
+    'Room','Category','Priority','Status','Description','Notes',
+    'Created At','Updated At',
+    'Assigned To',
+    'In Progress By','In Progress At',
+    'Resolved By','Resolved At'
+  ];
+
   const rows = tickets.map(t => [
     t.id,
     t.workerName,
+    t.workerNumber   || '',
+    t.passportNumber || '',
     t.workerPhone,
     t.room,
     t.category,
     t.priority,
     t.status,
-    t.description.replace(/\n/g,' '),
-    t.notes.replace(/\n/g,' '),
-    new Date(t.createdAt).toLocaleString(),
-    new Date(t.updatedAt).toLocaleString()
+    (t.description || '').replace(/\n/g,' '),
+    (t.notes || '').replace(/\n/g,' '),
+    fmtDate(t.createdAt),
+    fmtDate(t.updatedAt),
+    t.assignedTo    || '',
+    t.inProgressBy  || '',
+    t.inProgressAt  ? fmtDate(t.inProgressAt) : '',
+    t.resolvedBy    || '',
+    t.resolvedAt    ? fmtDate(t.resolvedAt) : ''
   ].map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(','));
 
-  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+  const csv  = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `project-pro-tickets-${fromVal||'all'}-to-${toVal||'all'}.csv`;
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `project-pro-${fromVal||'all'}-to-${toVal||'all'}.csv`;
   a.click();
   URL.revokeObjectURL(url);
   closeExport();
