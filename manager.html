@@ -120,15 +120,10 @@
   .status-btn.active-inprog{border-color:#f97316;background:#fff7ed;color:#f97316}
   .status-btn.active-resolved{border-color:#22c55e;background:#f0fdf4;color:#22c55e}
 
-  /* Handler assignment */
-  .assign-row{display:flex;gap:10px;margin:8px 0;flex-wrap:wrap}
-  .assign-btn{border:2px solid #e5e7eb;background:#f9fafb;border-radius:8px;padding:9px 20px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
-  .assign-btn:hover{border-color:#e85d04;color:#e85d04}
-  .assign-btn.active{border-color:#e85d04;background:#fff4ef;color:#e85d04}
-  .handler-info{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;font-size:.83rem;color:#555;margin-top:8px}
+  .handler-info{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;font-size:.83rem;color:#555;margin-bottom:10px}
   .handler-info .handler-row{display:flex;gap:8px;margin-bottom:4px}
   .handler-info .handler-row:last-child{margin-bottom:0}
-  .handler-info .h-lbl{font-weight:700;color:#888;min-width:110px}
+  .handler-info .h-lbl{font-weight:700;color:#888;min-width:120px}
   .handler-info .h-val{color:#222}
 
   .notes-area{width:100%;border:2px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:.88rem;font-family:inherit;min-height:90px;resize:vertical;outline:none}
@@ -462,21 +457,14 @@ function openModal(id) {
     }
   }
 
-  // Handler history
+  // Handler history (read-only, shows who did what)
   let handlerHistory = '';
-  if (t.assignedTo || t.inProgressBy || t.resolvedBy) {
+  if (t.inProgressBy || t.resolvedBy) {
     handlerHistory = `<div class="handler-info">`;
-    if (t.assignedTo)   handlerHistory += `<div class="handler-row"><span class="h-lbl">📋 Assigned to:</span><span class="h-val">${esc(t.assignedTo)}</span></div>`;
     if (t.inProgressBy) handlerHistory += `<div class="handler-row"><span class="h-lbl">🔧 In Progress by:</span><span class="h-val">${esc(t.inProgressBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.inProgressAt)}</span></span></div>`;
     if (t.resolvedBy)   handlerHistory += `<div class="handler-row"><span class="h-lbl">✅ Resolved by:</span><span class="h-val">${esc(t.resolvedBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.resolvedAt)}</span></span></div>`;
     handlerHistory += `</div>`;
   }
-
-  // Assign buttons (highlight current assignment)
-  const assignedTo = t.assignedTo || '';
-  const chanochActive = assignedTo === 'Hannoch' ? 'active' : '';
-  const aharonActive  = assignedTo === 'Aharon'  ? 'active' : '';
-  const isTest = currentUser === 'Test';
 
   document.getElementById('modalBody').innerHTML = `
     <div class="detail-row"><span class="lbl">Worker</span><span class="val">${esc(t.workerName)}</span></div>
@@ -489,14 +477,7 @@ function openModal(id) {
     <div class="detail-row"><span class="lbl">Submitted</span><span class="val">${fmtDate(t.createdAt)}</span></div>
     <div class="detail-row" style="flex-direction:column"><span class="lbl" style="margin-bottom:4px">Description</span><span class="val" style="white-space:pre-wrap">${esc(t.description)}</span></div>
     ${mediaHtml}
-
-    <div class="section-label">Who is handling this?</div>
-    <div class="assign-row">
-      <button class="assign-btn ${chanochActive}" onclick="assignTicket('Hannoch')">👤 Hannoch</button>
-      <button class="assign-btn ${aharonActive}"  onclick="assignTicket('Aharon')">👤 Aharon</button>
-      <button class="assign-btn" onclick="assignTicket('')" style="color:#aaa">✕ Unassign</button>
-    </div>
-    ${isTest ? '<p style="font-size:.78rem;color:#f97316;margin-top:-6px;margin-bottom:4px">🧪 Test mode — status changes will be marked as "Test"</p>' : ''}
+    ${handlerHistory}
 
     <div class="section-label">Status</div>
     <div class="status-row">
@@ -505,12 +486,9 @@ function openModal(id) {
       <button class="status-btn ${t.status==='resolved'?'active-resolved':''}" onclick="updateStatus('resolved')">✅ Resolved</button>
     </div>
 
-    <div class="section-label">Handler History</div>
-    ${handlerHistory || '<p style="font-size:.82rem;color:#aaa;margin-bottom:12px">No handler assigned yet.</p>'}
-
-    <div class="section-label">Manager Notes</div>
+    <div class="section-label">Notes</div>
     <textarea class="notes-area" id="notesArea" placeholder="Add notes here…">${esc(t.notes)}</textarea>
-    <button id="saveNotes" onclick="saveNotes()">💾 Save Notes</button>
+    <button id="saveNotes" onclick="saveNotes()">💾 Save</button>
   `;
 
   document.getElementById('modalOverlay').classList.add('open');
@@ -525,17 +503,6 @@ function handleOverlayClick(e) {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 }
 
-async function assignTicket(user) {
-  if (!currentTicketId) return;
-  await fetch(`/api/tickets/${currentTicketId}`, {
-    method: 'PATCH',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ assignedTo: user })
-  });
-  await fetchTickets();
-  openModal(currentTicketId);
-  showToast(user ? `Assigned to ${user}` : 'Unassigned');
-}
 
 async function updateStatus(status) {
   if (!currentTicketId) return;
@@ -545,8 +512,8 @@ async function updateStatus(status) {
     body: JSON.stringify({ status, handledBy: currentUser })
   });
   await fetchTickets();
-  openModal(currentTicketId);
-  showToast('Status updated');
+  closeModal();
+  showToast('Status updated ✓');
 }
 
 async function saveNotes() {
@@ -558,7 +525,8 @@ async function saveNotes() {
     body: JSON.stringify({ notes })
   });
   await fetchTickets();
-  showToast('Notes saved');
+  closeModal();
+  showToast('Saved ✓');
 }
 
 // ── Polling ───────────────────────────────────────────
