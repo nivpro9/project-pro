@@ -177,7 +177,11 @@
       </div>
       <div class="field" style="margin-bottom:0">
         <label data-t="labelRoom">Room / Location *</label>
-        <input type="text" id="room" data-ph="phRoom"/>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="room" data-ph="phRoom" style="flex:1"/>
+          <button type="button" id="geoBtn" onclick="getLocation()" title="Use my location" style="flex-shrink:0;background:#e85d04;color:#fff;border:none;border-radius:10px;padding:13px 14px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;min-width:48px;transition:background .2s">📍</button>
+        </div>
+        <div id="geoStatus" style="font-size:.78rem;color:#888;margin-top:5px;min-height:16px"></div>
       </div>
     </div>
 
@@ -253,10 +257,19 @@
       <!-- Sub: Apartment Issues -->
       <div id="sub-apartment" class="sub-cats" style="display:none">
         <div class="sub-label" data-t="apartmentLabel">Select issue type:</div>
-        <div class="cat-grid">
-          <button class="cat-btn sub-btn" data-cat="Water" onclick="selectCat(this)">💧 <span data-t="catWater">Water</span></button>
-          <button class="cat-btn sub-btn" data-cat="Gas" onclick="selectCat(this)">🔥 <span data-t="catGas">Gas</span></button>
-          <button class="cat-btn sub-btn" data-cat="Electricity" onclick="selectCat(this)">⚡ <span data-t="catElec">Electricity</span></button>
+        <div class="cat-grid" style="grid-template-columns:1fr 1fr">
+          <button class="cat-btn sub-btn" data-cat="Severe ceiling leak" onclick="selectCat(this)">🌧️ <span data-t="apt1">Severe ceiling leak</span></button>
+          <button class="cat-btn sub-btn" data-cat="Electrical short circuit" onclick="selectCat(this)">⚡ <span data-t="apt2">Electrical short circuit</span></button>
+          <button class="cat-btn sub-btn" data-cat="Severe flooding" onclick="selectCat(this)">🌊 <span data-t="apt3">Severe flooding</span></button>
+          <button class="cat-btn sub-btn" data-cat="No water at all" onclick="selectCat(this)">🚱 <span data-t="apt4">No water at all</span></button>
+          <button class="cat-btn sub-btn" data-cat="No electricity" onclick="selectCat(this)">🔌 <span data-t="apt5">No electricity</span></button>
+          <button class="cat-btn sub-btn" data-cat="Gas leak" onclick="selectCat(this)">💨 <span data-t="apt6">Gas leak</span></button>
+          <button class="cat-btn sub-btn" data-cat="Partial ceiling collapse" onclick="selectCat(this)">🏚️ <span data-t="apt7">Partial ceiling collapse</span></button>
+          <button class="cat-btn sub-btn" data-cat="Crumbling wall" onclick="selectCat(this)">🧱 <span data-t="apt8">Crumbling wall</span></button>
+          <button class="cat-btn sub-btn" data-cat="Front door won't lock" onclick="selectCat(this)">🚪 <span data-t="apt9">Front door won't lock</span></button>
+          <button class="cat-btn sub-btn" data-cat="Window won't close" onclick="selectCat(this)">🪟 <span data-t="apt10">Window won't close</span></button>
+          <button class="cat-btn sub-btn" data-cat="Severe mold spreading" onclick="selectCat(this)">🦠 <span data-t="apt11">Severe mold spreading</span></button>
+          <button class="cat-btn sub-btn" data-cat="Burst pipe" onclick="selectCat(this)">💥 <span data-t="apt12">Burst pipe</span></button>
         </div>
       </div>
 
@@ -316,7 +329,10 @@ const T = {
     itemPants:'Pants', itemShirt:'Shirt', itemShoes:'Shoes',
     sizeLabel:'Size:',
     apartmentLabel:'Select issue type:',
-    catWater:'Water', catGas:'Gas', catElec:'Electricity',
+    apt1:'Severe ceiling leak', apt2:'Electrical short circuit', apt3:'Severe flooding',
+    apt4:'No water at all', apt5:'No electricity', apt6:'Gas leak',
+    apt7:'Partial ceiling collapse', apt8:'Crumbling wall', apt9:"Front door won't lock",
+    apt10:"Window won't close", apt11:'Severe mold spreading', apt12:'Burst pipe',
     medicalLabel:'Select type:',
     catDoctor:'I Need a Doctor', catAccident:'Accident',
     whatHappened:'What happened?',
@@ -356,7 +372,10 @@ const T = {
     itemPants:'पैंट', itemShirt:'शर्ट', itemShoes:'जूते',
     sizeLabel:'साइज:',
     apartmentLabel:'समस्या का प्रकार चुनें:',
-    catWater:'पानी', catGas:'गैस', catElec:'बिजली',
+    apt1:'छत से गंभीर रिसाव', apt2:'बिजली का शॉर्ट सर्किट', apt3:'गंभीर बाढ़',
+    apt4:'पानी बिल्कुल नहीं', apt5:'बिजली नहीं है', apt6:'गैस रिसाव',
+    apt7:'छत आंशिक रूप से गिरी', apt8:'दीवार टूट रही है', apt9:'मुख्य दरवाज़ा बंद नहीं होता',
+    apt10:'खिड़की बंद नहीं होती', apt11:'दीवारों पर गंभीर फफूंद', apt12:'पाइप फट गया',
     medicalLabel:'प्रकार चुनें:',
     catDoctor:'मुझे डॉक्टर चाहिए', catAccident:'दुर्घटना',
     whatHappened:'क्या हुआ?',
@@ -505,6 +524,78 @@ function removeMedia() {
   document.getElementById('previewImg').src = '';
   document.getElementById('previewVid').src = '';
   updateMediaRequired();
+}
+
+// ── Geolocation ───────────────────────────────────────
+function getLocation() {
+  const btn    = document.getElementById('geoBtn');
+  const status = document.getElementById('geoStatus');
+  const t      = T[lang];
+
+  if (!navigator.geolocation) {
+    status.textContent = lang === 'hi' ? '❌ GPS इस डिवाइस पर उपलब्ध नहीं है' : '❌ GPS not available on this device';
+    return;
+  }
+
+  btn.textContent  = '⏳';
+  btn.disabled     = true;
+  status.textContent = lang === 'hi' ? '📡 लोकेशन ढूंढ रहे हैं...' : '📡 Finding your location...';
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const acc = Math.round(pos.coords.accuracy);
+
+      status.textContent = lang === 'hi' ? '🌐 पता प्राप्त हो रहा है...' : '🌐 Getting address...';
+
+      try {
+        // Free reverse geocoding via OpenStreetMap Nominatim
+        const resp = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        const data = await resp.json();
+        const addr = data.address || {};
+
+        // Build a short readable address
+        const parts = [
+          addr.road || addr.pedestrian || addr.footway,
+          addr.house_number,
+          addr.neighbourhood || addr.suburb,
+          addr.city || addr.town || addr.village || addr.county
+        ].filter(Boolean);
+
+        const readableAddr = parts.length ? parts.join(', ') : `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        document.getElementById('room').value = readableAddr;
+        status.textContent = lang === 'hi'
+          ? `✅ लोकेशन मिली (±${acc}m)`
+          : `✅ Location found (±${acc}m accuracy)`;
+        status.style.color = '#22c55e';
+      } catch {
+        // If API fails, fall back to coordinates
+        document.getElementById('room').value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        status.textContent = lang === 'hi' ? `✅ GPS निर्देशांक (±${acc}m)` : `✅ GPS coordinates (±${acc}m accuracy)`;
+        status.style.color = '#22c55e';
+      }
+
+      btn.textContent = '📍';
+      btn.disabled    = false;
+    },
+    (err) => {
+      btn.textContent = '📍';
+      btn.disabled    = false;
+      status.style.color = '#ef4444';
+      if (err.code === err.PERMISSION_DENIED) {
+        status.textContent = lang === 'hi'
+          ? '❌ GPS की अनुमति नहीं दी — कृपया ब्राउज़र सेटिंग में अनुमति दें'
+          : '❌ Location permission denied — please allow in browser settings';
+      } else {
+        status.textContent = lang === 'hi' ? '❌ लोकेशन नहीं मिली' : '❌ Could not get location';
+      }
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
 }
 
 // ── Toast ─────────────────────────────────────────────
