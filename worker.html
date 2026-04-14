@@ -274,15 +274,6 @@
       </div>
     </div>
 
-    <!-- Section 3: Priority -->
-    <div class="card">
-      <h3 data-t="priorityTitle">Priority *</h3>
-      <div class="priority-row">
-        <button class="pri-btn urgent" id="priUrgent" onclick="selectPri('urgent')">🔴 <span data-t="priUrgent">Urgent</span></button>
-        <button class="pri-btn regular" id="priRegular" onclick="selectPri('regular')">🟢 <span data-t="priRegular">Regular</span></button>
-      </div>
-    </div>
-
     <!-- Section 4: Media -->
     <div class="card" id="mediaCard">
       <h3>
@@ -483,13 +474,6 @@ function buildClothingDesc() {
     .join(' | ');
 }
 
-// ── Priority ──────────────────────────────────────────
-function selectPri(p) {
-  selectedPriority = p;
-  document.getElementById('priUrgent').classList.toggle('selected', p === 'urgent');
-  document.getElementById('priRegular').classList.toggle('selected', p === 'regular');
-}
-
 // ── Media ─────────────────────────────────────────────
 function handleMedia(input) {
   const file = input.files[0];
@@ -545,7 +529,7 @@ async function submitForm() {
   if (!room)      { showToast(t.toastRoom); return; }
   if (!selectedMain)     { showToast(t.toastCategory); return; }
   if (!selectedCategory) { showToast(t.toastSubCategory); return; }
-  if (!selectedPriority) { showToast(t.toastPriority); return; }
+  selectedPriority = 'regular';
 
   // Mandatory media for apartment & medical
   if ((selectedMain === 'apartment' || selectedMain === 'medical') && !mediaBase64) {
@@ -622,8 +606,6 @@ function resetForm() {
   document.querySelectorAll('.cat-btn,.sub-btn').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
   document.getElementById('medicalDescWrap').style.display = 'none';
-  document.getElementById('priUrgent').classList.remove('selected');
-  document.getElementById('priRegular').classList.remove('selected');
   document.getElementById('uploadZone').classList.remove('required-media');
   document.getElementById('mediaRequired').style.display = 'none';
   selectedCategory = ''; selectedMain = ''; selectedPriority = '';
