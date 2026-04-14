@@ -357,8 +357,27 @@ function timeAgo(ts) {
 }
 
 function fmtDate(ts) {
-  if (!ts) return '—';
+  if (!ts || ts === 0) return '—';
   return new Date(ts).toLocaleString();
+}
+
+// Parse old phone format: "Worker#111 | Passport:0638426 | Tel:0509022661"
+function parseOldPhone(t) {
+  const phone = t.workerPhone || '';
+  const oldFmt = /Worker#([^|]+)\|.*Passport:([^|]+)\|.*Tel:(.+)/i;
+  const m = phone.match(oldFmt);
+  if (m) {
+    return {
+      workerNumber:   t.workerNumber   || m[1].trim(),
+      passportNumber: t.passportNumber || m[2].trim(),
+      phone:          m[3].trim()
+    };
+  }
+  return {
+    workerNumber:   t.workerNumber   || '—',
+    passportNumber: t.passportNumber || '—',
+    phone:          phone || '—'
+  };
 }
 
 function esc(str) {
@@ -458,19 +477,24 @@ function openModal(id) {
   }
 
   // Handler history (read-only, shows who did what)
+  // Guard against legacy "0" values stored before the feature was added
+  const ipBy  = t.inProgressBy && t.inProgressBy !== '0' ? t.inProgressBy : '';
+  const resBy = t.resolvedBy   && t.resolvedBy   !== '0' ? t.resolvedBy   : '';
   let handlerHistory = '';
-  if (t.inProgressBy || t.resolvedBy) {
+  if (ipBy || resBy) {
     handlerHistory = `<div class="handler-info">`;
-    if (t.inProgressBy) handlerHistory += `<div class="handler-row"><span class="h-lbl">🔧 In Progress by:</span><span class="h-val">${esc(t.inProgressBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.inProgressAt)}</span></span></div>`;
-    if (t.resolvedBy)   handlerHistory += `<div class="handler-row"><span class="h-lbl">✅ Resolved by:</span><span class="h-val">${esc(t.resolvedBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.resolvedAt)}</span></span></div>`;
+    if (ipBy)  handlerHistory += `<div class="handler-row"><span class="h-lbl">🔧 In Progress by:</span><span class="h-val">${esc(ipBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.inProgressAt)}</span></span></div>`;
+    if (resBy) handlerHistory += `<div class="handler-row"><span class="h-lbl">✅ Resolved by:</span><span class="h-val">${esc(resBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.resolvedAt)}</span></span></div>`;
     handlerHistory += `</div>`;
   }
 
+  const parsed = parseOldPhone(t);
+
   document.getElementById('modalBody').innerHTML = `
     <div class="detail-row"><span class="lbl">Worker</span><span class="val">${esc(t.workerName)}</span></div>
-    <div class="detail-row"><span class="lbl">Worker Number</span><span class="val">${esc(t.workerNumber||'—')}</span></div>
-    <div class="detail-row"><span class="lbl">Passport</span><span class="val">${esc(t.passportNumber||'—')}</span></div>
-    <div class="detail-row"><span class="lbl">Phone</span><span class="val"><a href="tel:${esc(t.workerPhone)}">${esc(t.workerPhone)||'—'}</a></span></div>
+    <div class="detail-row"><span class="lbl">Worker Number</span><span class="val">${esc(parsed.workerNumber)}</span></div>
+    <div class="detail-row"><span class="lbl">Passport</span><span class="val">${esc(parsed.passportNumber)}</span></div>
+    <div class="detail-row"><span class="lbl">Phone</span><span class="val"><a href="tel:${esc(parsed.phone)}">${esc(parsed.phone)}</a></span></div>
     <div class="detail-row"><span class="lbl">Room / Location</span><span class="val">${esc(t.room)}</span></div>
     <div class="detail-row"><span class="lbl">Category</span><span class="val">${esc(t.category)}</span></div>
     <div class="detail-row"><span class="lbl">Priority</span><span class="val">${t.priority === 'urgent' ? '🔴 Urgent' : '🟢 Regular'}</span></div>
