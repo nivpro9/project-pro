@@ -9,6 +9,16 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
+// Helper — finds HTML in /public first, then root
+function sendHTML(res, filename) {
+  const inPublic = path.join(__dirname, 'public', filename);
+  const inRoot   = path.join(__dirname, filename);
+  const fs = require('fs');
+  if (fs.existsSync(inPublic)) return res.sendFile(inPublic);
+  if (fs.existsSync(inRoot))   return res.sendFile(inRoot);
+  res.status(404).send('Not found');
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -55,8 +65,8 @@ async function initDB() {
 }
 
 app.get('/',        (req, res) => res.redirect('/worker'));
-app.get('/worker',  (req, res) => res.sendFile(path.join(__dirname, 'public', 'worker.html')));
-app.get('/manager', (req, res) => res.sendFile(path.join(__dirname, 'public', 'manager.html')));
+app.get('/worker',  (req, res) => sendHTML(res, 'worker.html'));
+app.get('/manager', (req, res) => sendHTML(res, 'manager.html'));
 
 // POST /api/tickets
 app.post('/api/tickets', async (req, res) => {
