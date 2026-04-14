@@ -512,7 +512,7 @@ function selectCat(btn) {
 }
 
 function updateMediaRequired() {
-  const req = selectedMain === 'apartment' || selectedMain === 'medical';
+  const req = selectedMain === 'apartment';
   const zone = document.getElementById('uploadZone');
   const note = document.getElementById('mediaRequired');
   zone.classList.toggle('required-media', req && !mediaBase64);
@@ -679,8 +679,8 @@ async function submitForm() {
   if (!selectedCategory) { showToast(t.toastSubCategory); return; }
   selectedPriority = 'regular';
 
-  // Mandatory media for apartment & medical
-  if ((selectedMain === 'apartment' || selectedMain === 'medical') && !mediaBase64) {
+  // Mandatory media for apartment only
+  if (selectedMain === 'apartment' && !mediaBase64) {
     showToast(t.toastMedia);
     document.getElementById('uploadZone').classList.add('required-media');
     return;
