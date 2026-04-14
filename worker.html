@@ -276,13 +276,45 @@
       <!-- Sub: Medical -->
       <div id="sub-medical" class="sub-cats" style="display:none">
         <div class="sub-label" data-t="medicalLabel">Select type:</div>
-        <div class="cat-grid" style="margin-bottom:12px">
-          <button class="cat-btn sub-btn" data-cat="Need a Doctor" onclick="selectCat(this)">🏥 <span data-t="catDoctor">I Need a Doctor</span></button>
-          <button class="cat-btn sub-btn" data-cat="Accident" onclick="selectCat(this)">🚑 <span data-t="catAccident">Accident</span></button>
+        <div class="cat-grid" style="margin-bottom:10px">
+          <button class="cat-btn" id="medBtnDoctor" data-t="catDoctor" onclick="selectMedType('doctor')">🏥 I Need a Doctor</button>
+          <button class="cat-btn" id="medBtnAccident" data-t="catAccident" onclick="selectMedType('accident')">🚑 Work Accident</button>
         </div>
-        <div id="medicalDescWrap" style="display:none">
-          <label data-t="whatHappened">What happened?</label>
-          <textarea id="medicalDesc" rows="3"></textarea>
+
+        <!-- Doctor sub-issues -->
+        <div id="med-doctor-grid" style="display:none">
+          <div class="sub-label" data-t="medDoctorLabel">What's the problem?</div>
+          <div class="cat-grid" style="grid-template-columns:1fr 1fr">
+            <button class="cat-btn sub-btn" data-cat="Doctor – Strong pain"          onclick="selectCat(this)">😣 <span data-t="doc1">Strong pain</span></button>
+            <button class="cat-btn sub-btn" data-cat="Doctor – High fever"           onclick="selectCat(this)">🤒 <span data-t="doc2">High fever</span></button>
+            <button class="cat-btn sub-btn" data-cat="Doctor – Difficulty breathing" onclick="selectCat(this)">😮‍💨 <span data-t="doc3">Difficulty breathing</span></button>
+            <button class="cat-btn sub-btn" data-cat="Doctor – Work injury"          onclick="selectCat(this)">🤕 <span data-t="doc4">Work injury</span></button>
+            <button class="cat-btn sub-btn" data-cat="Doctor – Dizziness or weakness" onclick="selectCat(this)">😵 <span data-t="doc5">Dizziness / weakness</span></button>
+            <button class="cat-btn sub-btn" data-cat="Doctor – Severe headache"     onclick="selectCat(this)">🤯 <span data-t="doc6">Severe headache</span></button>
+            <button class="cat-btn sub-btn" data-cat="Doctor – Severe stomach pain" onclick="selectCat(this)">🤢 <span data-t="doc7">Severe stomach pain</span></button>
+            <button class="cat-btn sub-btn" data-cat="Doctor – Vomiting or diarrhea" onclick="selectCat(this)">🤮 <span data-t="doc8">Vomiting / diarrhea</span></button>
+            <button class="cat-btn sub-btn" data-cat="Doctor – Allergic reaction"   onclick="selectCat(this)">🤧 <span data-t="doc9">Allergic reaction</span></button>
+            <button class="cat-btn sub-btn" data-cat="Doctor – Infection or swelling" onclick="selectCat(this)">🩹 <span data-t="doc10">Infection / swelling</span></button>
+          </div>
+        </div>
+
+        <!-- Work Accident sub-issues -->
+        <div id="med-accident-grid" style="display:none">
+          <div class="sub-label" data-t="medAccidentLabel">Type of accident:</div>
+          <div class="cat-grid" style="grid-template-columns:1fr 1fr">
+            <button class="cat-btn sub-btn" data-cat="Accident – Deep cut"              onclick="selectCat(this)">🩸 <span data-t="acc1">Deep cut</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Broken arm or leg"    onclick="selectCat(this)">🦴 <span data-t="acc2">Broken arm / leg</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Fall from height"     onclick="selectCat(this)">🪜 <span data-t="acc3">Fall from height</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Strong blow to head"  onclick="selectCat(this)">💢 <span data-t="acc4">Strong blow to head</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Burn"                 onclick="selectCat(this)">🔥 <span data-t="acc5">Burn</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Eye injury"           onclick="selectCat(this)">👁️ <span data-t="acc6">Eye injury</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Heavy object on body" onclick="selectCat(this)">🪨 <span data-t="acc7">Heavy object on body</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Electrocution"        onclick="selectCat(this)">⚡ <span data-t="acc8">Electrocution</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Tool injury"          onclick="selectCat(this)">🔧 <span data-t="acc9">Tool injury</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Slip and fall"        onclick="selectCat(this)">🤸 <span data-t="acc10">Slip and fall</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Back injury"          onclick="selectCat(this)">🫀 <span data-t="acc11">Back injury</span></button>
+            <button class="cat-btn sub-btn" data-cat="Accident – Severe bleeding"      onclick="selectCat(this)">🆘 <span data-t="acc12">Severe bleeding</span></button>
+          </div>
         </div>
       </div>
     </div>
@@ -334,8 +366,15 @@ const T = {
     apt7:'Partial ceiling collapse', apt8:'Crumbling wall', apt9:"Front door won't lock",
     apt10:"Window won't close", apt11:'Severe mold spreading', apt12:'Burst pipe',
     medicalLabel:'Select type:',
-    catDoctor:'I Need a Doctor', catAccident:'Accident',
-    whatHappened:'What happened?',
+    catDoctor:'I Need a Doctor', catAccident:'Work Accident',
+    medDoctorLabel:"What's the problem?", medAccidentLabel:'Type of accident:',
+    doc1:'Strong pain', doc2:'High fever', doc3:'Difficulty breathing',
+    doc4:'Work injury', doc5:'Dizziness / weakness', doc6:'Severe headache',
+    doc7:'Severe stomach pain', doc8:'Vomiting / diarrhea', doc9:'Allergic reaction', doc10:'Infection / swelling',
+    acc1:'Deep cut', acc2:'Broken arm / leg', acc3:'Fall from height',
+    acc4:'Strong blow to head', acc5:'Burn', acc6:'Eye injury',
+    acc7:'Heavy object on body', acc8:'Electrocution', acc9:'Tool injury',
+    acc10:'Slip and fall', acc11:'Back injury', acc12:'Severe bleeding',
     priorityTitle:'PRIORITY *',
     priUrgent:'Urgent', priRegular:'Regular',
     mediaTitle:'Attach Photo / Video',
@@ -377,8 +416,15 @@ const T = {
     apt7:'छत आंशिक रूप से गिरी', apt8:'दीवार टूट रही है', apt9:'मुख्य दरवाज़ा बंद नहीं होता',
     apt10:'खिड़की बंद नहीं होती', apt11:'दीवारों पर गंभीर फफूंद', apt12:'पाइप फट गया',
     medicalLabel:'प्रकार चुनें:',
-    catDoctor:'मुझे डॉक्टर चाहिए', catAccident:'दुर्घटना',
-    whatHappened:'क्या हुआ?',
+    catDoctor:'मुझे डॉक्टर चाहिए', catAccident:'कार्य दुर्घटना',
+    medDoctorLabel:'क्या समस्या है?', medAccidentLabel:'दुर्घटना का प्रकार:',
+    doc1:'तेज दर्द', doc2:'तेज बुखार', doc3:'सांस लेने में कठिनाई',
+    doc4:'काम पर चोट', doc5:'चक्कर / कमजोरी', doc6:'तेज सिरदर्द',
+    doc7:'तेज पेट दर्द', doc8:'उल्टी / दस्त', doc9:'एलर्जी प्रतिक्रिया', doc10:'संक्रमण / सूजन',
+    acc1:'गहरा कट', acc2:'हाथ / पैर में फ्रैक्चर', acc3:'ऊंचाई से गिरना',
+    acc4:'सिर पर जोरदार चोट', acc5:'जलना', acc6:'आंख में चोट',
+    acc7:'भारी वस्तु गिरी', acc8:'बिजली का झटका', acc9:'औजार से चोट',
+    acc10:'फिसलकर गिरना', acc11:'पीठ में चोट', acc12:'तेज खून बहना',
     priorityTitle:'प्राथमिकता *',
     priUrgent:'अत्यावश्यक', priRegular:'सामान्य',
     mediaTitle:'फोटो / वीडियो संलग्न करें',
@@ -433,7 +479,11 @@ function selectMain(btn) {
   btn.classList.add('selected');
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('medicalDescWrap').style.display = 'none';
+  // Reset medical type
+  document.getElementById('med-doctor-grid').style.display = 'none';
+  document.getElementById('med-accident-grid').style.display = 'none';
+  document.getElementById('medBtnDoctor').classList.remove('selected');
+  document.getElementById('medBtnAccident').classList.remove('selected');
   selectedCategory = '';
   selectedMain = btn.dataset.main;
 
@@ -444,13 +494,20 @@ function selectMain(btn) {
   updateMediaRequired();
 }
 
+function selectMedType(type) {
+  document.getElementById('medBtnDoctor').classList.toggle('selected', type === 'doctor');
+  document.getElementById('medBtnAccident').classList.toggle('selected', type === 'accident');
+  document.getElementById('med-doctor-grid').style.display   = type === 'doctor'   ? 'block' : 'none';
+  document.getElementById('med-accident-grid').style.display = type === 'accident' ? 'block' : 'none';
+  // Clear any previously chosen sub-cat
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
+  selectedCategory = '';
+}
+
 function selectCat(btn) {
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedCategory = btn.dataset.cat;
-  // Show description for medical
-  const isM = selectedMain === 'medical';
-  document.getElementById('medicalDescWrap').style.display = isM ? 'block' : 'none';
   updateMediaRequired();
 }
 
@@ -635,12 +692,8 @@ async function submitForm() {
     if (!anyChecked) { showToast(t.toastClothing); return; }
   }
 
-  // Medical: description required
   let description = '';
-  if (selectedMain === 'medical') {
-    description = document.getElementById('medicalDesc').value.trim();
-    if (!description) { showToast(t.toastMedicalDesc); return; }
-  } else if (selectedMain === 'clothing') {
+  if (selectedMain === 'clothing') {
     description = buildClothingDesc();
   } else {
     description = selectedCategory;
@@ -683,7 +736,7 @@ async function submitForm() {
 
 // ── Reset ─────────────────────────────────────────────
 function resetForm() {
-  ['workerName','workerNumber','passportNumber','workerPhone','room','medicalDesc'].forEach(id => {
+  ['workerName','workerNumber','passportNumber','workerPhone','room'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -696,7 +749,10 @@ function resetForm() {
   });
   document.querySelectorAll('.cat-btn,.sub-btn').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
-  document.getElementById('medicalDescWrap').style.display = 'none';
+  document.getElementById('med-doctor-grid').style.display = 'none';
+  document.getElementById('med-accident-grid').style.display = 'none';
+  document.getElementById('medBtnDoctor').classList.remove('selected');
+  document.getElementById('medBtnAccident').classList.remove('selected');
   document.getElementById('uploadZone').classList.remove('required-media');
   document.getElementById('mediaRequired').style.display = 'none';
   selectedCategory = ''; selectedMain = ''; selectedPriority = '';
