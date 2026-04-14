@@ -8,10 +8,20 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f2f5;min-height:100vh}
 
+  /* Language screen */
+  #langScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:30px;text-align:center;background:#16213e}
+  #langScreen svg{margin-bottom:20px}
+  #langScreen h2{color:#fff;font-size:1.3rem;margin-bottom:6px}
+  #langScreen p{color:#aab;font-size:.9rem;margin-bottom:30px}
+  .lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:320px}
+  .lang-btn{background:#fff;border:3px solid #fff;border-radius:14px;padding:22px 10px;font-size:1.1rem;font-weight:800;cursor:pointer;transition:all .2s;color:#16213e}
+  .lang-btn:hover{background:#e85d04;border-color:#e85d04;color:#fff}
+  .lang-btn span{display:block;font-size:1.6rem;margin-bottom:6px}
+
   /* Header */
   header{background:#16213e;padding:14px 20px;display:flex;flex-direction:column;align-items:center;gap:6px}
   header .titles{text-align:center;color:#fff}
-  header .titles h1{font-size:1.25rem;font-weight:700;letter-spacing:.5px}
+  header .titles h1{font-size:1.25rem;font-weight:700}
   header .titles p{font-size:.8rem;color:#aab;margin-top:2px}
 
   /* Toast */
@@ -27,15 +37,16 @@
   #successScreen button{background:#e85d04;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer}
 
   /* Form */
+  #mainContent{display:none}
   #formWrap{max-width:560px;margin:0 auto;padding:20px 16px 40px}
 
   .card{background:#fff;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
   .card h3{font-size:.7rem;font-weight:800;letter-spacing:1.5px;color:#888;text-transform:uppercase;margin-bottom:14px}
 
   label{display:block;font-size:.85rem;font-weight:600;color:#333;margin-bottom:5px}
-  input[type=text],input[type=tel],textarea{width:100%;border:2px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:.95rem;font-family:inherit;outline:none;transition:border-color .2s}
-  input[type=text]:focus,input[type=tel]:focus,textarea:focus{border-color:#e85d04}
-  textarea{resize:vertical;min-height:100px}
+  input[type=text],input[type=tel],input[type=number],textarea{width:100%;border:2px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:.95rem;font-family:inherit;outline:none;transition:border-color .2s}
+  input[type=text]:focus,input[type=tel]:focus,input[type=number]:focus,textarea:focus{border-color:#e85d04}
+  textarea{resize:vertical;min-height:80px}
   .field{margin-bottom:14px}
 
   /* Category grid */
@@ -44,234 +55,442 @@
   .cat-btn:hover{border-color:#e85d04;background:#fff5f0}
   .cat-btn.selected{border-color:#e85d04;background:#fff5f0;color:#e85d04}
 
+  /* Size buttons */
+  .size-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .size-btn{border:2px solid #e5e7eb;background:#f9fafb;border-radius:8px;padding:8px 14px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;color:#333}
+  .size-btn:hover{border-color:#e85d04}
+  .size-btn.selected{border-color:#e85d04;background:#fff5f0;color:#e85d04}
+
+  /* Clothing items */
+  .clothing-item{background:#f9fafb;border:2px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:10px;transition:border-color .2s}
+  .clothing-item.active{border-color:#e85d04;background:#fff5f0}
+  .clothing-check{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.95rem;font-weight:600;color:#333}
+  .clothing-check input[type=checkbox]{width:18px;height:18px;accent-color:#e85d04;cursor:pointer}
+  .size-section{display:none;margin-top:10px}
+  .size-section.show{display:block}
+
   /* Priority */
   .priority-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .pri-btn{border:2px solid #e5e7eb;background:#f9fafb;border-radius:10px;padding:14px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center}
-  .pri-btn:hover{background:#f3f4f6}
   .pri-btn.urgent.selected{border-color:#ef4444;background:#fef2f2;color:#ef4444}
   .pri-btn.regular.selected{border-color:#22c55e;background:#f0fdf4;color:#22c55e}
 
   /* Media upload */
   .upload-zone{border:2px dashed #d1d5db;border-radius:10px;padding:24px;text-align:center;cursor:pointer;color:#888;font-size:.9rem;transition:border-color .2s}
   .upload-zone:hover{border-color:#e85d04}
+  .upload-zone.required-media{border-color:#ef4444;background:#fef2f2}
   .upload-zone input{display:none}
   #mediaPreview{margin-top:12px;display:none}
   #mediaPreview img,#mediaPreview video{max-width:100%;max-height:220px;border-radius:8px;display:block;margin:0 auto}
   #removeMedia{margin-top:8px;background:none;border:1px solid #ef4444;color:#ef4444;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600}
-
-  /* Clothing checkboxes */
-  .clothing-item{background:#f9fafb;border:2px solid #e5e7eb;border-radius:10px;padding:12px 14px;transition:border-color .2s}
-  .clothing-item:has(input:checked){border-color:#e85d04;background:#fff5f0}
-  .clothing-check{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.95rem;font-weight:600;color:#333}
-  .clothing-check input[type=checkbox]{width:18px;height:18px;accent-color:#e85d04;cursor:pointer}
+  .required-note{color:#ef4444;font-size:.78rem;font-weight:700;margin-top:6px;display:none}
+  .required-note.show{display:block}
 
   /* Submit */
   #submitBtn{width:100%;background:#e85d04;color:#fff;border:none;padding:16px;border-radius:12px;font-size:1.1rem;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:background .2s;margin-top:4px}
   #submitBtn:hover{background:#c44c00}
   #submitBtn:disabled{background:#aaa;cursor:not-allowed}
+
+  .sub-label{font-size:.75rem;color:#888;margin:12px 0 8px;font-weight:700}
 </style>
 </head>
 <body>
 
 <div id="toast"></div>
 
-<header>
-  <!-- Logo SVG -->
-  <svg viewBox="0 0 430 95" height="30px" xmlns="http://www.w3.org/2000/svg">
-    <!-- Blue cube (back) -->
+<!-- Language Selection Screen -->
+<div id="langScreen">
+  <svg viewBox="0 0 430 95" height="36px" xmlns="http://www.w3.org/2000/svg">
     <polygon points="10,40 34,26 58,40 34,54" fill="#5B8DD9"/>
     <polygon points="10,40 34,54 34,82 10,68" fill="#2E6DB4"/>
     <polygon points="34,54 58,40 58,68 34,82" fill="#1A5499"/>
-    <!-- Green cube (front) -->
     <polygon points="28,16 52,2 76,16 52,30" fill="#66BB6A"/>
     <polygon points="28,16 52,30 52,58 28,44" fill="#388E3C"/>
     <polygon points="52,30 76,16 76,44 52,58" fill="#2E7D32"/>
-    <!-- Text -->
-    <text x="88" y="64" font-size="50" font-weight="bold" fill="#2E6DB4" font-family="Trebuchet MS">Project Pro</text>
-    <text x="88" y="88" font-size="18" fill="#388E3C" font-style="italic" font-family="Georgia">Since 2013</text>
-    <text x="340" y="88" font-size="18" fill="#388E3C" font-style="italic" font-family="Georgia">group</text>
+    <text x="88" y="64" font-size="50" font-weight="bold" fill="#fff" font-family="Trebuchet MS">Project Pro</text>
+    <text x="88" y="88" font-size="18" fill="#66BB6A" font-style="italic" font-family="Georgia">Since 2013</text>
+    <text x="340" y="88" font-size="18" fill="#66BB6A" font-style="italic" font-family="Georgia">group</text>
   </svg>
-  <div class="titles">
-    <h1>Worker Portal</h1>
-    <p>Submit a maintenance or safety request</p>
+  <h2>Select Your Language</h2>
+  <p>अपनी भाषा चुनें</p>
+  <div class="lang-grid">
+    <button class="lang-btn" onclick="setLang('en')">
+      <span>🇬🇧</span>English
+    </button>
+    <button class="lang-btn" onclick="setLang('hi')">
+      <span>🇮🇳</span>हिंदी
+    </button>
   </div>
-</header>
-
-<!-- Success Screen -->
-<div id="successScreen">
-  <div class="check">✅</div>
-  <h2>Request Submitted!</h2>
-  <p>Your ticket ID is:</p>
-  <div class="ticket-id" id="ticketIdDisplay">PP-000</div>
-  <p style="color:#555;margin-bottom:24px">The logistics team has been notified and will respond shortly.</p>
-  <button onclick="resetForm()">Submit Another Request</button>
 </div>
 
-<!-- Form -->
-<div id="formWrap">
+<!-- Main Content (shown after language selection) -->
+<div id="mainContent">
+  <header>
+    <svg viewBox="0 0 430 95" height="30px" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="10,40 34,26 58,40 34,54" fill="#5B8DD9"/>
+      <polygon points="10,40 34,54 34,82 10,68" fill="#2E6DB4"/>
+      <polygon points="34,54 58,40 58,68 34,82" fill="#1A5499"/>
+      <polygon points="28,16 52,2 76,16 52,30" fill="#66BB6A"/>
+      <polygon points="28,16 52,30 52,58 28,44" fill="#388E3C"/>
+      <polygon points="52,30 76,16 76,44 52,58" fill="#2E7D32"/>
+      <text x="88" y="64" font-size="50" font-weight="bold" fill="#2E6DB4" font-family="Trebuchet MS">Project Pro</text>
+      <text x="88" y="88" font-size="18" fill="#388E3C" font-style="italic" font-family="Georgia">Since 2013</text>
+      <text x="340" y="88" font-size="18" fill="#388E3C" font-style="italic" font-family="Georgia">group</text>
+    </svg>
+    <div class="titles">
+      <h1 data-t="portalTitle">Worker Portal</h1>
+      <p data-t="portalSub">Submit a request</p>
+    </div>
+  </header>
 
-  <!-- Section 1: Details -->
-  <div class="card">
-    <h3>Your Details</h3>
-    <div class="field">
-      <label>Full Name *</label>
-      <input type="text" id="workerName" placeholder="e.g. John Smith"/>
-    </div>
-    <div class="field">
-      <label>Phone Number</label>
-      <input type="tel" id="workerPhone" placeholder="e.g. +1 555 0100"/>
-    </div>
-    <div class="field" style="margin-bottom:0">
-      <label>Room / Location *</label>
-      <input type="text" id="room" placeholder="e.g. Building A, Room 204"/>
-    </div>
+  <!-- Success Screen -->
+  <div id="successScreen">
+    <div class="check">✅</div>
+    <h2 data-t="successTitle">Request Submitted!</h2>
+    <p data-t="successSub">Your ticket ID is:</p>
+    <div class="ticket-id" id="ticketIdDisplay">PP-000</div>
+    <p style="color:#555;margin-bottom:24px" data-t="successMsg">The logistics team has been notified.</p>
+    <button onclick="resetForm()" data-t="submitAnother">Submit Another Request</button>
   </div>
 
-  <!-- Section 2: Category -->
-  <div class="card">
-    <h3>Category *</h3>
-    <!-- Main categories -->
-    <div class="cat-grid" id="mainCatGrid">
-      <button class="cat-btn" data-main="clothing" onclick="selectMain(this)">👕 Clothing</button>
-      <button class="cat-btn" data-main="apartment" onclick="selectMain(this)">🏠 Apartment Issues</button>
-      <button class="cat-btn" data-main="medical" onclick="selectMain(this)">🏥 Medical</button>
+  <!-- Form -->
+  <div id="formWrap">
+
+    <!-- Section 1: Details -->
+    <div class="card">
+      <h3 data-t="detailsTitle">Your Details</h3>
+      <div class="field">
+        <label data-t="labelName">Full Name *</label>
+        <input type="text" id="workerName" data-ph="phName"/>
+      </div>
+      <div class="field">
+        <label data-t="labelWorkerNum">Worker Number *</label>
+        <input type="text" id="workerNumber" data-ph="phWorkerNum"/>
+      </div>
+      <div class="field">
+        <label data-t="labelPassport">Passport Number *</label>
+        <input type="text" id="passportNumber" data-ph="phPassport"/>
+      </div>
+      <div class="field">
+        <label data-t="labelPhone">Phone Number</label>
+        <input type="tel" id="workerPhone" data-ph="phPhone"/>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label data-t="labelRoom">Room / Location *</label>
+        <input type="text" id="room" data-ph="phRoom"/>
+      </div>
     </div>
 
-    <!-- Sub: Clothing -->
-    <div id="sub-clothing" class="sub-cats" style="display:none">
-      <div style="font-size:.75rem;color:#888;margin:12px 0 8px;font-weight:700">Clothing Request — select items:</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
+    <!-- Section 2: Category -->
+    <div class="card">
+      <h3 data-t="categoryTitle">Category *</h3>
+      <div class="cat-grid" id="mainCatGrid">
+        <button class="cat-btn" data-main="clothing" onclick="selectMain(this)">👕 <span data-t="catClothing">Clothing</span></button>
+        <button class="cat-btn" data-main="apartment" onclick="selectMain(this)">🏠 <span data-t="catApartment">Apartment Issues</span></button>
+        <button class="cat-btn" data-main="medical" onclick="selectMain(this)">🏥 <span data-t="catMedical">Medical</span></button>
+      </div>
+
+      <!-- Sub: Clothing -->
+      <div id="sub-clothing" class="sub-cats" style="display:none">
+        <div class="sub-label" data-t="clothingLabel">Select items:</div>
+
         <div class="clothing-item" id="item-pants">
           <label class="clothing-check">
-            <input type="checkbox" id="chk-pants" onchange="toggleClothingItem('pants')"/>
-            <span>👖 Pants</span>
+            <input type="checkbox" id="chk-pants" onchange="toggleItem('pants')"/>
+            <span>👖 <span data-t="itemPants">Pants</span></span>
           </label>
-          <input type="text" id="size-pants" placeholder="Size (e.g. 32, M, L)" style="display:none;margin-top:6px"/>
+          <div class="size-section" id="sec-pants">
+            <div class="sub-label" data-t="sizeLabel">Size:</div>
+            <div class="size-grid" id="sizes-pants">
+              <button class="size-btn" onclick="selectSize('pants',this)">S</button>
+              <button class="size-btn" onclick="selectSize('pants',this)">M</button>
+              <button class="size-btn" onclick="selectSize('pants',this)">L</button>
+              <button class="size-btn" onclick="selectSize('pants',this)">XL</button>
+              <button class="size-btn" onclick="selectSize('pants',this)">XXL</button>
+            </div>
+          </div>
         </div>
+
         <div class="clothing-item" id="item-shirt">
           <label class="clothing-check">
-            <input type="checkbox" id="chk-shirt" onchange="toggleClothingItem('shirt')"/>
-            <span>👕 Shirt</span>
+            <input type="checkbox" id="chk-shirt" onchange="toggleItem('shirt')"/>
+            <span>👕 <span data-t="itemShirt">Shirt</span></span>
           </label>
-          <input type="text" id="size-shirt" placeholder="Size (e.g. M, L, XL)" style="display:none;margin-top:6px"/>
+          <div class="size-section" id="sec-shirt">
+            <div class="sub-label" data-t="sizeLabel">Size:</div>
+            <div class="size-grid" id="sizes-shirt">
+              <button class="size-btn" onclick="selectSize('shirt',this)">S</button>
+              <button class="size-btn" onclick="selectSize('shirt',this)">M</button>
+              <button class="size-btn" onclick="selectSize('shirt',this)">L</button>
+              <button class="size-btn" onclick="selectSize('shirt',this)">XL</button>
+              <button class="size-btn" onclick="selectSize('shirt',this)">XXL</button>
+            </div>
+          </div>
         </div>
+
         <div class="clothing-item" id="item-shoes">
           <label class="clothing-check">
-            <input type="checkbox" id="chk-shoes" onchange="toggleClothingItem('shoes')"/>
-            <span>👟 Shoes</span>
+            <input type="checkbox" id="chk-shoes" onchange="toggleItem('shoes')"/>
+            <span>👟 <span data-t="itemShoes">Shoes</span></span>
           </label>
-          <input type="text" id="size-shoes" placeholder="Size (e.g. 42, 43)" style="display:none;margin-top:6px"/>
+          <div class="size-section" id="sec-shoes">
+            <div class="sub-label" data-t="sizeLabel">Size:</div>
+            <div class="size-grid" id="sizes-shoes">
+              <button class="size-btn" onclick="selectSize('shoes',this)">38</button>
+              <button class="size-btn" onclick="selectSize('shoes',this)">39</button>
+              <button class="size-btn" onclick="selectSize('shoes',this)">40</button>
+              <button class="size-btn" onclick="selectSize('shoes',this)">41</button>
+              <button class="size-btn" onclick="selectSize('shoes',this)">42</button>
+              <button class="size-btn" onclick="selectSize('shoes',this)">43</button>
+              <button class="size-btn" onclick="selectSize('shoes',this)">44</button>
+              <button class="size-btn" onclick="selectSize('shoes',this)">45</button>
+              <button class="size-btn" onclick="selectSize('shoes',this)">46</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub: Apartment Issues -->
+      <div id="sub-apartment" class="sub-cats" style="display:none">
+        <div class="sub-label" data-t="apartmentLabel">Select issue type:</div>
+        <div class="cat-grid">
+          <button class="cat-btn sub-btn" data-cat="Water" onclick="selectCat(this)">💧 <span data-t="catWater">Water</span></button>
+          <button class="cat-btn sub-btn" data-cat="Gas" onclick="selectCat(this)">🔥 <span data-t="catGas">Gas</span></button>
+          <button class="cat-btn sub-btn" data-cat="Electricity" onclick="selectCat(this)">⚡ <span data-t="catElec">Electricity</span></button>
+        </div>
+      </div>
+
+      <!-- Sub: Medical -->
+      <div id="sub-medical" class="sub-cats" style="display:none">
+        <div class="sub-label" data-t="medicalLabel">Select type:</div>
+        <div class="cat-grid" style="margin-bottom:12px">
+          <button class="cat-btn sub-btn" data-cat="Need a Doctor" onclick="selectCat(this)">🏥 <span data-t="catDoctor">I Need a Doctor</span></button>
+          <button class="cat-btn sub-btn" data-cat="Accident" onclick="selectCat(this)">🚑 <span data-t="catAccident">Accident</span></button>
+        </div>
+        <div id="medicalDescWrap" style="display:none">
+          <label data-t="whatHappened">What happened?</label>
+          <textarea id="medicalDesc" rows="3"></textarea>
         </div>
       </div>
     </div>
 
-    <!-- Sub: Apartment Issues -->
-    <div id="sub-apartment" class="sub-cats" style="display:none">
-      <div style="font-size:.75rem;color:#888;margin:12px 0 8px;font-weight:700">Select issue type:</div>
-      <div class="cat-grid">
-        <button class="cat-btn sub-btn" data-cat="Water" onclick="selectCat(this)">💧 Water</button>
-        <button class="cat-btn sub-btn" data-cat="Gas" onclick="selectCat(this)">🔥 Gas</button>
-        <button class="cat-btn sub-btn" data-cat="Electricity" onclick="selectCat(this)">⚡ Electricity</button>
+    <!-- Section 3: Priority -->
+    <div class="card">
+      <h3 data-t="priorityTitle">Priority *</h3>
+      <div class="priority-row">
+        <button class="pri-btn urgent" id="priUrgent" onclick="selectPri('urgent')">🔴 <span data-t="priUrgent">Urgent</span></button>
+        <button class="pri-btn regular" id="priRegular" onclick="selectPri('regular')">🟢 <span data-t="priRegular">Regular</span></button>
       </div>
     </div>
 
-    <!-- Sub: Medical -->
-    <div id="sub-medical" class="sub-cats" style="display:none">
-      <div style="font-size:.75rem;color:#888;margin:12px 0 8px;font-weight:700">Select request type:</div>
-      <div class="cat-grid">
-        <button class="cat-btn sub-btn" data-cat="Feeling Sick" onclick="selectCat(this)">🤒 Feeling Sick</button>
-        <button class="cat-btn sub-btn" data-cat="Hospital Evacuation" onclick="selectCat(this)">🚑 Hospital Evacuation</button>
-        <button class="cat-btn sub-btn" data-cat="Medication Request" onclick="selectCat(this)">💊 Medication Request</button>
+    <!-- Section 4: Media -->
+    <div class="card" id="mediaCard">
+      <h3>
+        <span data-t="mediaTitle">Attach Photo / Video</span>
+        <span id="mediaRequired" class="required-note show" style="display:none" data-t="mediaRequired">* Required</span>
+      </h3>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('mediaInput').click()">
+        <input type="file" id="mediaInput" accept="image/*,video/*" onchange="handleMedia(this)"/>
+        <span data-t="mediaPrompt">📎 Tap to attach a photo or video</span>
+        <div style="font-size:.75rem;margin-top:4px;color:#bbb" data-t="mediaLimit">Max 10 MB</div>
+      </div>
+      <div id="mediaPreview">
+        <img id="previewImg" src="" alt="preview" style="display:none"/>
+        <video id="previewVid" controls style="display:none"></video>
+        <button id="removeMedia" onclick="removeMedia()" data-t="removeMedia">✕ Remove</button>
       </div>
     </div>
+
+    <button id="submitBtn" onclick="submitForm()" data-t="submitBtn">Submit Request</button>
   </div>
-
-
-  <!-- Section 3: Priority -->
-  <div class="card">
-    <h3>Priority *</h3>
-    <div class="priority-row">
-      <button class="pri-btn urgent" id="priUrgent" onclick="selectPri('urgent')">🔴 Urgent</button>
-      <button class="pri-btn regular" id="priRegular" onclick="selectPri('regular')">🟢 Regular</button>
-    </div>
-  </div>
-
-  <!-- Section 4: Description -->
-  <div class="card">
-    <h3>Description *</h3>
-    <textarea id="description" placeholder="Describe the issue in detail…"></textarea>
-  </div>
-
-  <!-- Section 5: Media -->
-  <div class="card">
-    <h3>Attach Photo / Video (optional)</h3>
-    <div class="upload-zone" onclick="document.getElementById('mediaInput').click()">
-      <input type="file" id="mediaInput" accept="image/*,video/*" onchange="handleMedia(this)"/>
-      📎 Tap to attach a photo or video
-      <div style="font-size:.75rem;margin-top:4px;color:#bbb">Max 10 MB</div>
-    </div>
-    <div id="mediaPreview">
-      <img id="previewImg" src="" alt="preview" style="display:none"/>
-      <video id="previewVid" controls style="display:none"></video>
-      <button id="removeMedia" onclick="removeMedia()">✕ Remove</button>
-    </div>
-  </div>
-
-  <button id="submitBtn" onclick="submitForm()">Submit Request</button>
 </div>
 
 <script>
+// ── Translations ──────────────────────────────────────
+const T = {
+  en: {
+    portalTitle:'Worker Portal', portalSub:'Submit a request',
+    successTitle:'Request Submitted!', successSub:'Your ticket ID is:',
+    successMsg:'The logistics team has been notified.',
+    submitAnother:'Submit Another Request',
+    detailsTitle:'YOUR DETAILS',
+    labelName:'Full Name *', phName:'e.g. John Smith',
+    labelWorkerNum:'Worker Number *', phWorkerNum:'e.g. 1234',
+    labelPassport:'Passport Number *', phPassport:'e.g. AB1234567',
+    labelPhone:'Phone Number', phPhone:'e.g. +1 555 0100',
+    labelRoom:'Room / Location *', phRoom:'e.g. Building A, Room 204',
+    categoryTitle:'CATEGORY *',
+    catClothing:'Clothing', catApartment:'Apartment Issues', catMedical:'Medical',
+    clothingLabel:'Select items:',
+    itemPants:'Pants', itemShirt:'Shirt', itemShoes:'Shoes',
+    sizeLabel:'Size:',
+    apartmentLabel:'Select issue type:',
+    catWater:'Water', catGas:'Gas', catElec:'Electricity',
+    medicalLabel:'Select type:',
+    catDoctor:'I Need a Doctor', catAccident:'Accident',
+    whatHappened:'What happened?',
+    priorityTitle:'PRIORITY *',
+    priUrgent:'Urgent', priRegular:'Regular',
+    mediaTitle:'Attach Photo / Video',
+    mediaRequired:'* Required',
+    mediaPrompt:'📎 Tap to attach a photo or video',
+    mediaLimit:'Max 10 MB',
+    removeMedia:'✕ Remove',
+    submitBtn:'Submit Request',
+    toastName:'Please enter your full name',
+    toastWorkerNum:'Please enter your worker number',
+    toastPassport:'Please enter your passport number',
+    toastRoom:'Please enter your room / location',
+    toastCategory:'Please select a category',
+    toastSubCategory:'Please select a sub-category',
+    toastPriority:'Please select a priority level',
+    toastMedia:'Please attach a photo or video (required for this category)',
+    toastClothing:'Please select at least one clothing item',
+    toastMedicalDesc:'Please describe what happened',
+  },
+  hi: {
+    portalTitle:'वर्कर पोर्टल', portalSub:'अनुरोध सबमिट करें',
+    successTitle:'अनुरोध सबमिट हो गया!', successSub:'आपका टिकट ID है:',
+    successMsg:'लॉजिस्टिक्स टीम को सूचित कर दिया गया है।',
+    submitAnother:'एक और अनुरोध सबमिट करें',
+    detailsTitle:'आपकी जानकारी',
+    labelName:'पूरा नाम *', phName:'जैसे: राज कुमार',
+    labelWorkerNum:'कर्मचारी नंबर *', phWorkerNum:'जैसे: 1234',
+    labelPassport:'पासपोर्ट नंबर *', phPassport:'जैसे: AB1234567',
+    labelPhone:'फोन नंबर', phPhone:'जैसे: +91 9876543210',
+    labelRoom:'कमरा / स्थान *', phRoom:'जैसे: बिल्डिंग A, कमरा 204',
+    categoryTitle:'श्रेणी *',
+    catClothing:'कपड़े', catApartment:'अपार्टमेंट समस्या', catMedical:'चिकित्सा',
+    clothingLabel:'आइटम चुनें:',
+    itemPants:'पैंट', itemShirt:'शर्ट', itemShoes:'जूते',
+    sizeLabel:'साइज:',
+    apartmentLabel:'समस्या का प्रकार चुनें:',
+    catWater:'पानी', catGas:'गैस', catElec:'बिजली',
+    medicalLabel:'प्रकार चुनें:',
+    catDoctor:'मुझे डॉक्टर चाहिए', catAccident:'दुर्घटना',
+    whatHappened:'क्या हुआ?',
+    priorityTitle:'प्राथमिकता *',
+    priUrgent:'अत्यावश्यक', priRegular:'सामान्य',
+    mediaTitle:'फोटो / वीडियो संलग्न करें',
+    mediaRequired:'* आवश्यक',
+    mediaPrompt:'📎 फोटो या वीडियो संलग्न करने के लिए टैप करें',
+    mediaLimit:'अधिकतम 10 MB',
+    removeMedia:'✕ हटाएं',
+    submitBtn:'अनुरोध सबमिट करें',
+    toastName:'कृपया अपना पूरा नाम दर्ज करें',
+    toastWorkerNum:'कृपया अपना कर्मचारी नंबर दर्ज करें',
+    toastPassport:'कृपया अपना पासपोर्ट नंबर दर्ज करें',
+    toastRoom:'कृपया अपना कमरा / स्थान दर्ज करें',
+    toastCategory:'कृपया एक श्रेणी चुनें',
+    toastSubCategory:'कृपया एक उप-श्रेणी चुनें',
+    toastPriority:'कृपया प्राथमिकता चुनें',
+    toastMedia:'कृपया फोटो या वीडियो संलग्न करें (इस श्रेणी के लिए आवश्यक)',
+    toastClothing:'कृपया कम से कम एक कपड़े का आइटम चुनें',
+    toastMedicalDesc:'कृपया बताएं क्या हुआ',
+  }
+};
+
+let lang = 'en';
 let selectedCategory = '';
+let selectedMain = '';
 let selectedPriority = '';
 let mediaBase64 = '';
 let mediaType = '';
+const selectedSizes = { pants: '', shirt: '', shoes: '' };
 
+function setLang(l) {
+  lang = l;
+  document.getElementById('langScreen').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+  applyTranslations();
+}
+
+function applyTranslations() {
+  const t = T[lang];
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.dataset.t;
+    if (t[key]) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-ph]').forEach(el => {
+    const key = el.dataset.ph;
+    if (t[key]) el.placeholder = t[key];
+  });
+}
+
+// ── Category selection ────────────────────────────────
 function selectMain(btn) {
   document.querySelectorAll('#mainCatGrid .cat-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('medicalDescWrap').style.display = 'none';
   selectedCategory = '';
-  const sub = document.getElementById('sub-' + btn.dataset.main);
+  selectedMain = btn.dataset.main;
+
+  const sub = document.getElementById('sub-' + selectedMain);
   if (sub) sub.style.display = 'block';
-  // if clothing — set category automatically
-  if (btn.dataset.main === 'clothing') selectedCategory = 'Clothing Request';
+  if (selectedMain === 'clothing') selectedCategory = 'Clothing Request';
+
+  updateMediaRequired();
 }
 
 function selectCat(btn) {
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedCategory = btn.dataset.cat;
+  // Show description for medical
+  const isM = selectedMain === 'medical';
+  document.getElementById('medicalDescWrap').style.display = isM ? 'block' : 'none';
+  updateMediaRequired();
 }
 
-function toggleClothingItem(item) {
-  const sizeInput = document.getElementById('size-' + item);
+function updateMediaRequired() {
+  const req = selectedMain === 'apartment' || selectedMain === 'medical';
+  const zone = document.getElementById('uploadZone');
+  const note = document.getElementById('mediaRequired');
+  zone.classList.toggle('required-media', req && !mediaBase64);
+  note.style.display = req ? 'inline' : 'none';
+}
+
+// ── Clothing ──────────────────────────────────────────
+function toggleItem(item) {
   const checked = document.getElementById('chk-' + item).checked;
-  sizeInput.style.display = checked ? 'block' : 'none';
-  if (!checked) sizeInput.value = '';
+  const sec = document.getElementById('sec-' + item);
+  const box = document.getElementById('item-' + item);
+  sec.classList.toggle('show', checked);
+  box.classList.toggle('active', checked);
+  if (!checked) {
+    selectedSizes[item] = '';
+    document.querySelectorAll(`#sizes-${item} .size-btn`).forEach(b => b.classList.remove('selected'));
+  }
 }
 
-function buildClothingDesc(extra) {
+function selectSize(item, btn) {
+  document.querySelectorAll(`#sizes-${item} .size-btn`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedSizes[item] = btn.textContent;
+}
+
+function buildClothingDesc() {
   const items = [
-    { id: 'pants', label: 'Pants' },
-    { id: 'shirt', label: 'Shirt' },
-    { id: 'shoes', label: 'Shoes' }
+    { id:'pants', label:'Pants' },
+    { id:'shirt', label:'Shirt' },
+    { id:'shoes', label:'Shoes' }
   ];
-  const lines = items
+  return items
     .filter(i => document.getElementById('chk-' + i.id).checked)
-    .map(i => {
-      const size = document.getElementById('size-' + i.id).value.trim();
-      return `${i.label}: ${size || '—'}`;
-    });
-  return lines.join(' | ') + (extra ? '\n\n' + extra : '');
+    .map(i => `${i.label}: ${selectedSizes[i.id] || '—'}`)
+    .join(' | ');
 }
 
+// ── Priority ──────────────────────────────────────────
 function selectPri(p) {
   selectedPriority = p;
   document.getElementById('priUrgent').classList.toggle('selected', p === 'urgent');
   document.getElementById('priRegular').classList.toggle('selected', p === 'regular');
 }
 
+// ── Media ─────────────────────────────────────────────
 function handleMedia(input) {
   const file = input.files[0];
   if (!file) return;
@@ -281,6 +500,7 @@ function handleMedia(input) {
     mediaBase64 = e.target.result;
     mediaType = file.type;
     document.getElementById('mediaPreview').style.display = 'block';
+    document.getElementById('uploadZone').classList.remove('required-media');
     if (file.type.startsWith('image/')) {
       document.getElementById('previewImg').src = mediaBase64;
       document.getElementById('previewImg').style.display = 'block';
@@ -295,35 +515,65 @@ function handleMedia(input) {
 }
 
 function removeMedia() {
-  mediaBase64 = '';
-  mediaType = '';
+  mediaBase64 = ''; mediaType = '';
   document.getElementById('mediaInput').value = '';
   document.getElementById('mediaPreview').style.display = 'none';
   document.getElementById('previewImg').src = '';
   document.getElementById('previewVid').src = '';
+  updateMediaRequired();
 }
 
+// ── Toast ─────────────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  setTimeout(() => t.classList.remove('show'), 3200);
 }
 
+// ── Submit ────────────────────────────────────────────
 async function submitForm() {
+  const t = T[lang];
   const name = document.getElementById('workerName').value.trim();
+  const workerNum = document.getElementById('workerNumber').value.trim();
+  const passport = document.getElementById('passportNumber').value.trim();
   const room = document.getElementById('room').value.trim();
-  const desc = document.getElementById('description').value.trim();
 
-  if (!name) { showToast('Please enter your full name'); return; }
-  if (!room) { showToast('Please enter your room / location'); return; }
-  if (!selectedCategory) { showToast('Please select a category'); return; }
-  if (!selectedPriority) { showToast('Please select a priority level'); return; }
-  if (!desc) { showToast('Please enter a description'); return; }
+  if (!name)      { showToast(t.toastName); return; }
+  if (!workerNum) { showToast(t.toastWorkerNum); return; }
+  if (!passport)  { showToast(t.toastPassport); return; }
+  if (!room)      { showToast(t.toastRoom); return; }
+  if (!selectedMain)     { showToast(t.toastCategory); return; }
+  if (!selectedCategory) { showToast(t.toastSubCategory); return; }
+  if (!selectedPriority) { showToast(t.toastPriority); return; }
+
+  // Mandatory media for apartment & medical
+  if ((selectedMain === 'apartment' || selectedMain === 'medical') && !mediaBase64) {
+    showToast(t.toastMedia);
+    document.getElementById('uploadZone').classList.add('required-media');
+    return;
+  }
+
+  // Clothing: at least one item
+  if (selectedMain === 'clothing') {
+    const anyChecked = ['pants','shirt','shoes'].some(i => document.getElementById('chk-' + i).checked);
+    if (!anyChecked) { showToast(t.toastClothing); return; }
+  }
+
+  // Medical: description required
+  let description = '';
+  if (selectedMain === 'medical') {
+    description = document.getElementById('medicalDesc').value.trim();
+    if (!description) { showToast(t.toastMedicalDesc); return; }
+  } else if (selectedMain === 'clothing') {
+    description = buildClothingDesc();
+  } else {
+    description = selectedCategory;
+  }
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.textContent = 'Submitting…';
+  btn.textContent = '...';
 
   try {
     const res = await fetch('/api/tickets', {
@@ -331,13 +581,11 @@ async function submitForm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         workerName: name,
-        workerPhone: document.getElementById('workerPhone').value.trim(),
+        workerPhone: `Worker#${workerNum} | Passport:${passport} | Tel:${document.getElementById('workerPhone').value.trim()}`,
         room,
         category: selectedCategory,
         priority: selectedPriority,
-        description: selectedCategory === 'Clothing Request'
-          ? buildClothingDesc(desc)
-          : desc,
+        description,
         mediaBase64,
         mediaType
       })
@@ -355,25 +603,30 @@ async function submitForm() {
     showToast('Network error. Please check your connection.');
   }
   btn.disabled = false;
-  btn.textContent = 'Submit Request';
+  btn.textContent = T[lang].submitBtn;
 }
 
+// ── Reset ─────────────────────────────────────────────
 function resetForm() {
-  document.getElementById('workerName').value = '';
-  document.getElementById('workerPhone').value = '';
-  document.getElementById('room').value = '';
-  document.getElementById('description').value = '';
+  ['workerName','workerNumber','passportNumber','workerPhone','room','medicalDesc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   ['pants','shirt','shoes'].forEach(item => {
     document.getElementById('chk-' + item).checked = false;
-    document.getElementById('size-' + item).value = '';
-    document.getElementById('size-' + item).style.display = 'none';
+    document.getElementById('sec-' + item).classList.remove('show');
+    document.getElementById('item-' + item).classList.remove('active');
+    document.querySelectorAll(`#sizes-${item} .size-btn`).forEach(b => b.classList.remove('selected'));
+    selectedSizes[item] = '';
   });
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.cat-btn,.sub-btn').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
+  document.getElementById('medicalDescWrap').style.display = 'none';
   document.getElementById('priUrgent').classList.remove('selected');
   document.getElementById('priRegular').classList.remove('selected');
-  selectedCategory = '';
-  selectedPriority = '';
+  document.getElementById('uploadZone').classList.remove('required-media');
+  document.getElementById('mediaRequired').style.display = 'none';
+  selectedCategory = ''; selectedMain = ''; selectedPriority = '';
   removeMedia();
   document.getElementById('successScreen').style.display = 'none';
   document.getElementById('formWrap').style.display = 'block';
