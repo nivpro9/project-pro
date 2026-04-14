@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Project Pro – Worker Portal</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f2f5;min-height:100vh}
+
+  /* Header */
+  header{background:#16213e;padding:14px 20px;display:flex;flex-direction:column;align-items:center;gap:6px}
+  header .titles{text-align:center;color:#fff}
+  header .titles h1{font-size:1.25rem;font-weight:700;letter-spacing:.5px}
+  header .titles p{font-size:.8rem;color:#aab;margin-top:2px}
+
+  /* Toast */
+  #toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#e85d04;color:#fff;padding:10px 22px;border-radius:8px;font-size:.9rem;font-weight:600;z-index:9999;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap}
+  #toast.show{opacity:1}
+
+  /* Success screen */
+  #successScreen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:40px 20px;text-align:center}
+  #successScreen .check{font-size:4rem;margin-bottom:16px}
+  #successScreen h2{color:#16213e;font-size:1.5rem;margin-bottom:8px}
+  #successScreen p{color:#555;margin-bottom:16px}
+  #successScreen .ticket-id{font-size:2.8rem;font-weight:900;color:#e85d04;letter-spacing:2px;margin:12px 0 24px}
+  #successScreen button{background:#e85d04;color:#fff;border:none;padding:14px 32px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer}
+
+  /* Form */
+  #formWrap{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+
+  .card{background:#fff;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .card h3{font-size:.7rem;font-weight:800;letter-spacing:1.5px;color:#888;text-transform:uppercase;margin-bottom:14px}
+
+  label{display:block;font-size:.85rem;font-weight:600;color:#333;margin-bottom:5px}
+  input[type=text],input[type=tel],textarea{width:100%;border:2px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:.95rem;font-family:inherit;outline:none;transition:border-color .2s}
+  input[type=text]:focus,input[type=tel]:focus,textarea:focus{border-color:#e85d04}
+  textarea{resize:vertical;min-height:100px}
+  .field{margin-bottom:14px}
+
+  /* Category grid */
+  .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .cat-btn{border:2px solid #e5e7eb;background:#f9fafb;border-radius:10px;padding:12px 8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;color:#333}
+  .cat-btn:hover{border-color:#e85d04;background:#fff5f0}
+  .cat-btn.selected{border-color:#e85d04;background:#fff5f0;color:#e85d04}
+
+  /* Priority */
+  .priority-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pri-btn{border:2px solid #e5e7eb;background:#f9fafb;border-radius:10px;padding:14px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center}
+  .pri-btn:hover{background:#f3f4f6}
+  .pri-btn.urgent.selected{border-color:#ef4444;background:#fef2f2;color:#ef4444}
+  .pri-btn.regular.selected{border-color:#22c55e;background:#f0fdf4;color:#22c55e}
+
+  /* Media upload */
+  .upload-zone{border:2px dashed #d1d5db;border-radius:10px;padding:24px;text-align:center;cursor:pointer;color:#888;font-size:.9rem;transition:border-color .2s}
+  .upload-zone:hover{border-color:#e85d04}
+  .upload-zone input{display:none}
+  #mediaPreview{margin-top:12px;display:none}
+  #mediaPreview img,#mediaPreview video{max-width:100%;max-height:220px;border-radius:8px;display:block;margin:0 auto}
+  #removeMedia{margin-top:8px;background:none;border:1px solid #ef4444;color:#ef4444;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600}
+
+  /* Submit */
+  #submitBtn{width:100%;background:#e85d04;color:#fff;border:none;padding:16px;border-radius:12px;font-size:1.1rem;font-weight:800;cursor:pointer;letter-spacing:.5px;transition:background .2s;margin-top:4px}
+  #submitBtn:hover{background:#c44c00}
+  #submitBtn:disabled{background:#aaa;cursor:not-allowed}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<header>
+  <!-- Logo SVG -->
+  <svg viewBox="0 0 430 95" height="30px" xmlns="http://www.w3.org/2000/svg">
+    <!-- Blue cube (back) -->
+    <polygon points="10,40 34,26 58,40 34,54" fill="#5B8DD9"/>
+    <polygon points="10,40 34,54 34,82 10,68" fill="#2E6DB4"/>
+    <polygon points="34,54 58,40 58,68 34,82" fill="#1A5499"/>
+    <!-- Green cube (front) -->
+    <polygon points="28,16 52,2 76,16 52,30" fill="#66BB6A"/>
+    <polygon points="28,16 52,30 52,58 28,44" fill="#388E3C"/>
+    <polygon points="52,30 76,16 76,44 52,58" fill="#2E7D32"/>
+    <!-- Text -->
+    <text x="88" y="64" font-size="50" font-weight="bold" fill="#2E6DB4" font-family="Trebuchet MS">Project Pro</text>
+    <text x="88" y="88" font-size="18" fill="#388E3C" font-style="italic" font-family="Georgia">Since 2013</text>
+    <text x="340" y="88" font-size="18" fill="#388E3C" font-style="italic" font-family="Georgia">group</text>
+  </svg>
+  <div class="titles">
+    <h1>Worker Portal</h1>
+    <p>Submit a maintenance or safety request</p>
+  </div>
+</header>
+
+<!-- Success Screen -->
+<div id="successScreen">
+  <div class="check">✅</div>
+  <h2>Request Submitted!</h2>
+  <p>Your ticket ID is:</p>
+  <div class="ticket-id" id="ticketIdDisplay">PP-000</div>
+  <p style="color:#555;margin-bottom:24px">The logistics team has been notified and will respond shortly.</p>
+  <button onclick="resetForm()">Submit Another Request</button>
+</div>
+
+<!-- Form -->
+<div id="formWrap">
+
+  <!-- Section 1: Details -->
+  <div class="card">
+    <h3>Your Details</h3>
+    <div class="field">
+      <label>Full Name *</label>
+      <input type="text" id="workerName" placeholder="e.g. John Smith"/>
+    </div>
+    <div class="field">
+      <label>Phone Number</label>
+      <input type="tel" id="workerPhone" placeholder="e.g. +1 555 0100"/>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>Room / Location *</label>
+      <input type="text" id="room" placeholder="e.g. Building A, Room 204"/>
+    </div>
+  </div>
+
+  <!-- Section 2: Category -->
+  <div class="card">
+    <h3>Category *</h3>
+    <div class="cat-grid" id="catGrid">
+      <button class="cat-btn" data-cat="Emergency" onclick="selectCat(this)">🚨 Emergency</button>
+      <button class="cat-btn" data-cat="Injury" onclick="selectCat(this)">🤕 Injury</button>
+      <button class="cat-btn" data-cat="Feeling Sick" onclick="selectCat(this)">🤒 Feeling Sick</button>
+      <button class="cat-btn" data-cat="Evacuation" onclick="selectCat(this)">🚪 Evacuation</button>
+      <button class="cat-btn" data-cat="Water Leak" onclick="selectCat(this)">💧 Water Leak</button>
+      <button class="cat-btn" data-cat="Electricity" onclick="selectCat(this)">⚡ Electricity</button>
+      <button class="cat-btn" data-cat="Maintenance" onclick="selectCat(this)">🔧 Maintenance</button>
+      <button class="cat-btn" data-cat="Apartment Issue" onclick="selectCat(this)">🏠 Apartment Issue</button>
+    </div>
+  </div>
+
+  <!-- Section 3: Priority -->
+  <div class="card">
+    <h3>Priority *</h3>
+    <div class="priority-row">
+      <button class="pri-btn urgent" id="priUrgent" onclick="selectPri('urgent')">🔴 Urgent</button>
+      <button class="pri-btn regular" id="priRegular" onclick="selectPri('regular')">🟢 Regular</button>
+    </div>
+  </div>
+
+  <!-- Section 4: Description -->
+  <div class="card">
+    <h3>Description *</h3>
+    <textarea id="description" placeholder="Describe the issue in detail…"></textarea>
+  </div>
+
+  <!-- Section 5: Media -->
+  <div class="card">
+    <h3>Attach Photo / Video (optional)</h3>
+    <div class="upload-zone" onclick="document.getElementById('mediaInput').click()">
+      <input type="file" id="mediaInput" accept="image/*,video/*" onchange="handleMedia(this)"/>
+      📎 Tap to attach a photo or video
+      <div style="font-size:.75rem;margin-top:4px;color:#bbb">Max 10 MB</div>
+    </div>
+    <div id="mediaPreview">
+      <img id="previewImg" src="" alt="preview" style="display:none"/>
+      <video id="previewVid" controls style="display:none"></video>
+      <button id="removeMedia" onclick="removeMedia()">✕ Remove</button>
+    </div>
+  </div>
+
+  <button id="submitBtn" onclick="submitForm()">Submit Request</button>
+</div>
+
+<script>
+let selectedCategory = '';
+let selectedPriority = '';
+let mediaBase64 = '';
+let mediaType = '';
+
+function selectCat(btn) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedCategory = btn.dataset.cat;
+}
+
+function selectPri(p) {
+  selectedPriority = p;
+  document.getElementById('priUrgent').classList.toggle('selected', p === 'urgent');
+  document.getElementById('priRegular').classList.toggle('selected', p === 'regular');
+}
+
+function handleMedia(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('File exceeds 10 MB limit'); input.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    mediaBase64 = e.target.result;
+    mediaType = file.type;
+    document.getElementById('mediaPreview').style.display = 'block';
+    if (file.type.startsWith('image/')) {
+      document.getElementById('previewImg').src = mediaBase64;
+      document.getElementById('previewImg').style.display = 'block';
+      document.getElementById('previewVid').style.display = 'none';
+    } else {
+      document.getElementById('previewVid').src = mediaBase64;
+      document.getElementById('previewVid').style.display = 'block';
+      document.getElementById('previewImg').style.display = 'none';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeMedia() {
+  mediaBase64 = '';
+  mediaType = '';
+  document.getElementById('mediaInput').value = '';
+  document.getElementById('mediaPreview').style.display = 'none';
+  document.getElementById('previewImg').src = '';
+  document.getElementById('previewVid').src = '';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+async function submitForm() {
+  const name = document.getElementById('workerName').value.trim();
+  const room = document.getElementById('room').value.trim();
+  const desc = document.getElementById('description').value.trim();
+
+  if (!name) { showToast('Please enter your full name'); return; }
+  if (!room) { showToast('Please enter your room / location'); return; }
+  if (!selectedCategory) { showToast('Please select a category'); return; }
+  if (!selectedPriority) { showToast('Please select a priority level'); return; }
+  if (!desc) { showToast('Please enter a description'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  try {
+    const res = await fetch('/api/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        workerName: name,
+        workerPhone: document.getElementById('workerPhone').value.trim(),
+        room,
+        category: selectedCategory,
+        priority: selectedPriority,
+        description: desc,
+        mediaBase64,
+        mediaType
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('ticketIdDisplay').textContent = data.id;
+      document.getElementById('formWrap').style.display = 'none';
+      document.getElementById('successScreen').style.display = 'flex';
+      window.scrollTo(0, 0);
+    } else {
+      showToast('Submission failed. Please try again.');
+    }
+  } catch {
+    showToast('Network error. Please check your connection.');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Submit Request';
+}
+
+function resetForm() {
+  document.getElementById('workerName').value = '';
+  document.getElementById('workerPhone').value = '';
+  document.getElementById('room').value = '';
+  document.getElementById('description').value = '';
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('priUrgent').classList.remove('selected');
+  document.getElementById('priRegular').classList.remove('selected');
+  selectedCategory = '';
+  selectedPriority = '';
+  removeMedia();
+  document.getElementById('successScreen').style.display = 'none';
+  document.getElementById('formWrap').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
