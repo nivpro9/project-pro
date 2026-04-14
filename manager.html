@@ -101,6 +101,24 @@
   #saveNotes{background:#16213e;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:.88rem;font-weight:700;cursor:pointer;margin-top:8px}
   #saveNotes:hover{background:#0f3460}
   .section-label{font-size:.72rem;font-weight:800;letter-spacing:1.2px;color:#888;text-transform:uppercase;margin:16px 0 8px}
+
+  /* Export button */
+  #exportBtn{background:#22c55e;color:#fff;border:none;padding:7px 16px;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600}
+  #exportBtn:hover{background:#16a34a}
+
+  /* Export modal */
+  #exportOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:20px}
+  #exportOverlay.open{display:flex}
+  #exportModal{background:#fff;border-radius:16px;width:100%;max-width:400px;overflow:hidden}
+  #exportModal .modal-header{background:#16213e;color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+  #exportModal .modal-header h2{font-size:1rem;font-weight:700}
+  #exportModal .modal-body{padding:20px}
+  .date-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .date-row label{display:block;font-size:.8rem;font-weight:700;color:#555;margin-bottom:5px}
+  .date-row input{width:100%;border:2px solid #e5e7eb;border-radius:8px;padding:9px 10px;font-size:.88rem;outline:none}
+  .date-row input:focus{border-color:#e85d04}
+  #doExportBtn{width:100%;background:#22c55e;color:#fff;border:none;padding:13px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer}
+  #doExportBtn:hover{background:#16a34a}
 </style>
 </head>
 <body>
@@ -137,7 +155,10 @@
         <p>Logistics control panel</p>
       </div>
     </div>
-    <button id="logoutBtn" onclick="logout()">🔒 Logout</button>
+    <div style="display:flex;gap:8px">
+      <button id="exportBtn" onclick="openExport()">📊 Export to Excel</button>
+      <button id="logoutBtn" onclick="logout()">🔒 Logout</button>
+    </div>
   </header>
 
   <div class="dash-body">
@@ -159,6 +180,30 @@
 
     <!-- Ticket list -->
     <div id="ticketList"></div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div id="exportOverlay" onclick="if(event.target===this)closeExport()">
+  <div id="exportModal">
+    <div class="modal-header">
+      <h2>📊 Export to Excel</h2>
+      <button onclick="closeExport()" style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.85rem;color:#555;margin-bottom:16px">Select date range (or leave empty to export all tickets)</p>
+      <div class="date-row">
+        <div>
+          <label>From Date</label>
+          <input type="date" id="exportFrom"/>
+        </div>
+        <div>
+          <label>To Date</label>
+          <input type="date" id="exportTo"/>
+        </div>
+      </div>
+      <button id="doExportBtn" onclick="doExport()">⬇ Download Excel</button>
+    </div>
   </div>
 </div>
 
@@ -383,6 +428,65 @@ let pollInterval;
 function startPolling() {
   fetchTickets();
   pollInterval = setInterval(fetchTickets, 5000);
+}
+
+// ── Export to Excel ───────────────────────────────────
+function openExport() {
+  // default: from = 30 days ago, to = today
+  const today = new Date();
+  const from = new Date(today); from.setDate(from.getDate() - 30);
+  document.getElementById('exportTo').value = today.toISOString().split('T')[0];
+  document.getElementById('exportFrom').value = from.toISOString().split('T')[0];
+  document.getElementById('exportOverlay').classList.add('open');
+}
+
+function closeExport() {
+  document.getElementById('exportOverlay').classList.remove('open');
+}
+
+function doExport() {
+  const fromVal = document.getElementById('exportFrom').value;
+  const toVal = document.getElementById('exportTo').value;
+
+  let tickets = [...allTickets];
+
+  if (fromVal) {
+    const from = new Date(fromVal); from.setHours(0,0,0,0);
+    tickets = tickets.filter(t => new Date(t.createdAt) >= from);
+  }
+  if (toVal) {
+    const to = new Date(toVal); to.setHours(23,59,59,999);
+    tickets = tickets.filter(t => new Date(t.createdAt) <= to);
+  }
+
+  if (!tickets.length) { showToast('No tickets in selected date range'); return; }
+
+  // Build CSV
+  const headers = ['ID','Worker Name','Phone','Room','Category','Priority','Status','Description','Notes','Created At','Updated At'];
+  const rows = tickets.map(t => [
+    t.id,
+    t.workerName,
+    t.workerPhone,
+    t.room,
+    t.category,
+    t.priority,
+    t.status,
+    t.description.replace(/\n/g,' '),
+    t.notes.replace(/\n/g,' '),
+    new Date(t.createdAt).toLocaleString(),
+    new Date(t.updatedAt).toLocaleString()
+  ].map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(','));
+
+  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `project-pro-tickets-${fromVal||'all'}-to-${toVal||'all'}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeExport();
+  showToast('✅ Excel file downloaded!');
 }
 </script>
 </body>
