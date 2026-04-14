@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 const TICKETS_FILE = path.join(__dirname, 'tickets.json');
 
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 // Load tickets from disk
 function loadTickets() {
@@ -26,8 +26,8 @@ function saveTickets(data) {
 
 // Routes
 app.get('/', (req, res) => res.redirect('/worker'));
-app.get('/worker', (req, res) => res.sendFile(path.join(__dirname, 'public', 'worker.html')));
-app.get('/manager', (req, res) => res.sendFile(path.join(__dirname, 'public', 'manager.html')));
+app.get('/worker', (req, res) => res.sendFile(path.join(__dirname, 'worker.html')));
+app.get('/manager', (req, res) => res.sendFile(path.join(__dirname, 'manager.html')));
 
 // POST /api/tickets — create new ticket
 app.post('/api/tickets', (req, res) => {
