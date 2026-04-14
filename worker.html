@@ -124,15 +124,56 @@
   <!-- Section 2: Category -->
   <div class="card">
     <h3>Category *</h3>
-    <div class="cat-grid" id="catGrid">
-      <button class="cat-btn" data-cat="Emergency" onclick="selectCat(this)">🚨 Emergency</button>
-      <button class="cat-btn" data-cat="Injury" onclick="selectCat(this)">🤕 Injury</button>
-      <button class="cat-btn" data-cat="Feeling Sick" onclick="selectCat(this)">🤒 Feeling Sick</button>
-      <button class="cat-btn" data-cat="Evacuation" onclick="selectCat(this)">🚪 Evacuation</button>
-      <button class="cat-btn" data-cat="Water Leak" onclick="selectCat(this)">💧 Water Leak</button>
-      <button class="cat-btn" data-cat="Electricity" onclick="selectCat(this)">⚡ Electricity</button>
-      <button class="cat-btn" data-cat="Maintenance" onclick="selectCat(this)">🔧 Maintenance</button>
-      <button class="cat-btn" data-cat="Apartment Issue" onclick="selectCat(this)">🏠 Apartment Issue</button>
+    <!-- Main categories -->
+    <div class="cat-grid" id="mainCatGrid">
+      <button class="cat-btn" data-main="clothing" onclick="selectMain(this)">👕 Clothing</button>
+      <button class="cat-btn" data-main="apartment" onclick="selectMain(this)">🏠 Apartment Issues</button>
+      <button class="cat-btn" data-main="medical" onclick="selectMain(this)">🏥 Medical</button>
+    </div>
+
+    <!-- Sub: Clothing -->
+    <div id="sub-clothing" class="sub-cats" style="display:none">
+      <div style="font-size:.75rem;color:#888;margin:12px 0 8px;font-weight:700">Select request type:</div>
+      <div class="cat-grid">
+        <button class="cat-btn sub-btn" data-cat="Clothing Request" onclick="selectCat(this)">👕 Clothing Request</button>
+      </div>
+    </div>
+
+    <!-- Sub: Apartment Issues -->
+    <div id="sub-apartment" class="sub-cats" style="display:none">
+      <div style="font-size:.75rem;color:#888;margin:12px 0 8px;font-weight:700">Select issue type:</div>
+      <div class="cat-grid">
+        <button class="cat-btn sub-btn" data-cat="Water" onclick="selectCat(this)">💧 Water</button>
+        <button class="cat-btn sub-btn" data-cat="Gas" onclick="selectCat(this)">🔥 Gas</button>
+        <button class="cat-btn sub-btn" data-cat="Electricity" onclick="selectCat(this)">⚡ Electricity</button>
+      </div>
+    </div>
+
+    <!-- Sub: Medical -->
+    <div id="sub-medical" class="sub-cats" style="display:none">
+      <div style="font-size:.75rem;color:#888;margin:12px 0 8px;font-weight:700">Select request type:</div>
+      <div class="cat-grid">
+        <button class="cat-btn sub-btn" data-cat="Feeling Sick" onclick="selectCat(this)">🤒 Feeling Sick</button>
+        <button class="cat-btn sub-btn" data-cat="Hospital Evacuation" onclick="selectCat(this)">🚑 Hospital Evacuation</button>
+        <button class="cat-btn sub-btn" data-cat="Medication Request" onclick="selectCat(this)">💊 Medication Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clothing sizes (shown only when Clothing Request selected) -->
+  <div class="card" id="clothingCard" style="display:none">
+    <h3>Clothing Sizes</h3>
+    <div class="field">
+      <label>Pants Size</label>
+      <input type="text" id="pantSize" placeholder="e.g. 32, M, L, XL"/>
+    </div>
+    <div class="field">
+      <label>Shirt Size</label>
+      <input type="text" id="shirtSize" placeholder="e.g. M, L, XL, XXL"/>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>2nd Shirt Size</label>
+      <input type="text" id="shirt2Size" placeholder="e.g. M, L, XL, XXL"/>
     </div>
   </div>
 
@@ -175,10 +216,24 @@ let selectedPriority = '';
 let mediaBase64 = '';
 let mediaType = '';
 
+function selectMain(btn) {
+  document.querySelectorAll('#mainCatGrid .cat-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  // hide all sub menus and reset sub selection
+  document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('clothingCard').style.display = 'none';
+  selectedCategory = '';
+  // show relevant sub menu
+  const sub = document.getElementById('sub-' + btn.dataset.main);
+  if (sub) sub.style.display = 'block';
+}
+
 function selectCat(btn) {
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedCategory = btn.dataset.cat;
+  document.getElementById('clothingCard').style.display = selectedCategory === 'בקשת בגדים' ? 'block' : 'none';
 }
 
 function selectPri(p) {
@@ -250,7 +305,9 @@ async function submitForm() {
         room,
         category: selectedCategory,
         priority: selectedPriority,
-        description: desc,
+        description: selectedCategory === 'Clothing Request'
+          ? `Pants: ${document.getElementById('pantSize').value.trim() || '—'} | Shirt: ${document.getElementById('shirtSize').value.trim() || '—'} | 2nd Shirt: ${document.getElementById('shirt2Size').value.trim() || '—'}\n\n${desc}`
+          : desc,
         mediaBase64,
         mediaType
       })
@@ -276,7 +333,12 @@ function resetForm() {
   document.getElementById('workerPhone').value = '';
   document.getElementById('room').value = '';
   document.getElementById('description').value = '';
+  document.getElementById('pantSize').value = '';
+  document.getElementById('shirtSize').value = '';
+  document.getElementById('shirt2Size').value = '';
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
+  document.getElementById('clothingCard').style.display = 'none';
   document.getElementById('priUrgent').classList.remove('selected');
   document.getElementById('priRegular').classList.remove('selected');
   selectedCategory = '';
