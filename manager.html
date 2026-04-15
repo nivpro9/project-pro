@@ -505,14 +505,14 @@ function openModal(id) {
 
     <div class="section-label">Status</div>
     <div class="status-row">
-      <button class="status-btn ${t.status==='new'?'active-new':''}" onclick="updateStatus('new')">🔵 New</button>
-      <button class="status-btn ${t.status==='in-progress'?'active-inprog':''}" onclick="updateStatus('in-progress')">🟡 In Progress</button>
-      <button class="status-btn ${t.status==='resolved'?'active-resolved':''}" onclick="updateStatus('resolved')">✅ Resolved</button>
+      <button class="status-btn ${t.status==='new'?'active-new':''}" id="sBtn-new" onclick="selectStatus('new')">🔵 New</button>
+      <button class="status-btn ${t.status==='in-progress'?'active-inprog':''}" id="sBtn-in-progress" onclick="selectStatus('in-progress')">🟡 In Progress</button>
+      <button class="status-btn ${t.status==='resolved'?'active-resolved':''}" id="sBtn-resolved" onclick="selectStatus('resolved')">✅ Resolved</button>
     </div>
 
-    <div class="section-label">Notes</div>
+    <div class="section-label">Notes <span style="font-weight:400;color:#bbb;font-size:.78rem;text-transform:none;letter-spacing:0">(optional)</span></div>
     <textarea class="notes-area" id="notesArea" placeholder="Add notes here…">${esc(t.notes)}</textarea>
-    <button id="saveNotes" onclick="saveNotes()">💾 Save</button>
+    <button id="saveNotes" onclick="saveAll()" style="margin-top:10px">💾 Save</button>
   `;
 
   document.getElementById('modalOverlay').classList.add('open');
@@ -521,6 +521,7 @@ function openModal(id) {
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
   currentTicketId = null;
+  pendingStatus   = null;
 }
 
 function handleOverlayClick(e) {
@@ -528,26 +529,33 @@ function handleOverlayClick(e) {
 }
 
 
-async function updateStatus(status) {
-  if (!currentTicketId) return;
-  await fetch(`/api/tickets/${currentTicketId}`, {
-    method: 'PATCH',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ status, handledBy: currentUser })
+let pendingStatus = null;
+
+function selectStatus(status) {
+  pendingStatus = status;
+  // Update button highlight only — don't save yet
+  document.querySelectorAll('.status-btn').forEach(b => {
+    b.classList.remove('active-new','active-inprog','active-resolved');
   });
-  await fetchTickets();
-  closeModal();
-  showToast('Status updated ✓');
+  const map = { 'new':'active-new', 'in-progress':'active-inprog', 'resolved':'active-resolved' };
+  const btn = document.getElementById('sBtn-' + status);
+  if (btn) btn.classList.add(map[status]);
 }
 
-async function saveNotes() {
+async function saveAll() {
   if (!currentTicketId) return;
-  const notes = document.getElementById('notesArea').value;
+  const notes  = document.getElementById('notesArea').value;
+  const body   = { notes };
+  if (pendingStatus) {
+    body.status    = pendingStatus;
+    body.handledBy = currentUser;
+  }
   await fetch(`/api/tickets/${currentTicketId}`, {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ notes })
+    body: JSON.stringify(body)
   });
+  pendingStatus = null;
   await fetchTickets();
   closeModal();
   showToast('Saved ✓');
