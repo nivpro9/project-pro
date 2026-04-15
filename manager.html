@@ -103,11 +103,14 @@
   .modal-header{background:#16213e;color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
   .modal-header h2{font-size:1rem;font-weight:700}
   #closeModal{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;line-height:1;padding:0 4px}
-  .modal-body{padding:20px}
-  .detail-row{display:flex;gap:8px;margin-bottom:10px;font-size:.88rem;flex-wrap:wrap}
-  .detail-row .lbl{font-weight:700;color:#555;min-width:120px}
-  .detail-row .val{color:#222}
-  .detail-row .val a{color:#e85d04;text-decoration:none}
+  .modal-body{padding:0}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #f0f2f5}
+  .detail-cell{padding:11px 18px;border-bottom:1px solid #f0f2f5;font-size:.86rem}
+  .detail-cell.full{grid-column:1/-1}
+  .detail-cell .lbl{font-size:.7rem;font-weight:800;letter-spacing:.8px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+  .detail-cell .val{color:#16213e;font-weight:600;word-break:break-word}
+  .detail-cell .val a{color:#e85d04;text-decoration:none;font-weight:700}
+  .modal-actions{padding:16px 18px}
   .modal-media{margin:14px 0}
   .modal-media img{max-width:100%;border-radius:8px;cursor:pointer}
   .modal-media video{max-width:100%;border-radius:8px}
@@ -120,11 +123,11 @@
   .status-btn.active-inprog{border-color:#f97316;background:#fff7ed;color:#f97316}
   .status-btn.active-resolved{border-color:#22c55e;background:#f0fdf4;color:#22c55e}
 
-  .handler-info{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;font-size:.83rem;color:#555;margin-bottom:10px}
-  .handler-info .handler-row{display:flex;gap:8px;margin-bottom:4px}
+  .handler-info{font-size:.83rem;color:#555}
+  .handler-info .handler-row{display:flex;gap:8px;margin-bottom:6px;align-items:baseline}
   .handler-info .handler-row:last-child{margin-bottom:0}
-  .handler-info .h-lbl{font-weight:700;color:#888;min-width:120px}
-  .handler-info .h-val{color:#222}
+  .handler-info .h-lbl{font-size:.7rem;font-weight:800;letter-spacing:.8px;color:#aaa;text-transform:uppercase;min-width:120px}
+  .handler-info .h-val{color:#16213e;font-weight:600}
 
   .notes-area{width:100%;border:2px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:.88rem;font-family:inherit;min-height:90px;resize:vertical;outline:none}
   .notes-area:focus{border-color:#e85d04}
@@ -514,27 +517,57 @@ function openModal(id) {
   const parsed = parseOldPhone(t);
 
   document.getElementById('modalBody').innerHTML = `
-    <div class="detail-row"><span class="lbl">Worker</span><span class="val">${esc(t.workerName)}</span></div>
-    <div class="detail-row"><span class="lbl">Worker Number</span><span class="val">${esc(parsed.workerNumber)}</span></div>
-    <div class="detail-row"><span class="lbl">Passport</span><span class="val">${esc(parsed.passportNumber)}</span></div>
-    <div class="detail-row"><span class="lbl">Phone</span><span class="val"><a href="tel:${esc(parsed.phone)}">${esc(parsed.phone)}</a></span></div>
-    <div class="detail-row"><span class="lbl">Room / Location</span><span class="val">${esc(t.room)}</span></div>
-    <div class="detail-row"><span class="lbl">Category</span><span class="val">${esc(t.category)}</span></div>
-    <div class="detail-row"><span class="lbl">Submitted</span><span class="val">${fmtDate(t.createdAt)}</span></div>
-    <div class="detail-row" style="flex-direction:column"><span class="lbl" style="margin-bottom:4px">Description</span><span class="val" style="white-space:pre-wrap">${esc(t.description)}</span></div>
-    ${mediaHtml}
-    ${handlerHistory}
-
-    <div class="section-label">Status</div>
-    <div class="status-row">
-      <button class="status-btn ${t.status==='new'?'active-new':''}" id="sBtn-new" onclick="selectStatus('new')">🔵 New</button>
-      <button class="status-btn ${t.status==='in-progress'?'active-inprog':''}" id="sBtn-in-progress" onclick="selectStatus('in-progress')">🟡 In Progress</button>
-      <button class="status-btn ${t.status==='resolved'?'active-resolved':''}" id="sBtn-resolved" onclick="selectStatus('resolved')">✅ Resolved</button>
+    <div class="detail-grid">
+      <div class="detail-cell">
+        <div class="lbl">Worker</div>
+        <div class="val">${esc(t.workerName)}</div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Submitted</div>
+        <div class="val">${fmtDate(t.createdAt)}</div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Worker Number</div>
+        <div class="val">${esc(parsed.workerNumber)}</div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Passport</div>
+        <div class="val">${esc(parsed.passportNumber)}</div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Phone</div>
+        <div class="val"><a href="tel:${esc(parsed.phone)}">${esc(parsed.phone)}</a></div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Room / Location</div>
+        <div class="val">${esc(t.room)}</div>
+      </div>
+      <div class="detail-cell full">
+        <div class="lbl">Category</div>
+        <div class="val">${esc(t.category)}</div>
+      </div>
+      ${t.description ? `
+      <div class="detail-cell full">
+        <div class="lbl">Description</div>
+        <div class="val" style="white-space:pre-wrap">${esc(t.description)}</div>
+      </div>` : ''}
     </div>
 
-    <div class="section-label">Notes <span style="font-weight:400;color:#bbb;font-size:.78rem;text-transform:none;letter-spacing:0">(optional)</span></div>
-    <textarea class="notes-area" id="notesArea" placeholder="Add notes here…">${esc(t.notes)}</textarea>
-    <button id="saveNotes" style="margin-top:10px">💾 Save</button>
+    ${mediaHtml ? `<div style="padding:14px 18px;border-bottom:1px solid #f0f2f5">${mediaHtml}</div>` : ''}
+
+    ${handlerHistory ? `<div style="padding:12px 18px;border-bottom:1px solid #f0f2f5">${handlerHistory}</div>` : ''}
+
+    <div class="modal-actions">
+      <div class="section-label" style="margin-top:0">Status</div>
+      <div class="status-row">
+        <button class="status-btn ${t.status==='new'?'active-new':''}" id="sBtn-new" onclick="selectStatus('new')">🔵 New</button>
+        <button class="status-btn ${t.status==='in-progress'?'active-inprog':''}" id="sBtn-in-progress" onclick="selectStatus('in-progress')">🟡 In Progress</button>
+        <button class="status-btn ${t.status==='resolved'?'active-resolved':''}" id="sBtn-resolved" onclick="selectStatus('resolved')">✅ Resolved</button>
+      </div>
+      <div class="section-label">Notes <span style="font-weight:400;color:#bbb;font-size:.78rem;text-transform:none;letter-spacing:0">(optional)</span></div>
+      <textarea class="notes-area" id="notesArea" placeholder="Add notes here…">${esc(t.notes)}</textarea>
+      <button id="saveNotes" style="margin-top:10px;width:100%;background:#16213e;color:#fff;border:none;padding:13px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">💾 Save</button>
+    </div>
   `;
 
   document.getElementById('modalOverlay').classList.add('open');
