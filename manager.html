@@ -226,7 +226,6 @@
       <button class="filter-btn" data-filter="new" onclick="setFilter(this)">🔴 New</button>
       <button class="filter-btn" data-filter="in-progress" onclick="setFilter(this)">🟡 In Progress</button>
       <button class="filter-btn" data-filter="resolved" onclick="setFilter(this)">✅ Resolved</button>
-      <button class="filter-btn" data-filter="urgent" onclick="setFilter(this)">⚡ Urgent</button>
     </div>
 
     <!-- Ticket list -->
@@ -410,8 +409,7 @@ async function fetchTickets() {
 
 function renderTickets() {
   let list = allTickets;
-  if (currentFilter === 'urgent')       list = list.filter(t => t.priority === 'urgent');
-  else if (currentFilter !== 'all')     list = list.filter(t => t.status === currentFilter);
+  if (currentFilter !== 'all') list = list.filter(t => t.status === currentFilter);
 
   const el = document.getElementById('ticketList');
   if (!list.length) {
@@ -426,10 +424,9 @@ function renderTickets() {
     if (t.resolvedBy)   handlerLine = `<div class="tc-handler">✅ Resolved by: ${esc(t.resolvedBy)}</div>`;
 
     return `
-      <div class="ticket-card ${t.priority}" onclick="openModal('${t.id}')">
+      <div class="ticket-card" onclick="openModal('${t.id}')">
         <div class="tc-top">
           <span class="tc-id">${t.id}</span>
-          <span class="badge ${t.priority}">${t.priority === 'urgent' ? '🔴 Urgent' : '🟢 Regular'}</span>
           <span class="badge ${t.status}">${statusLabel(t.status)}</span>
         </div>
         <div class="tc-meta"><strong>${esc(t.workerName)}</strong> &nbsp;·&nbsp; ${esc(t.room)} &nbsp;·&nbsp; ${esc(t.category)}</div>
@@ -497,7 +494,6 @@ function openModal(id) {
     <div class="detail-row"><span class="lbl">Phone</span><span class="val"><a href="tel:${esc(parsed.phone)}">${esc(parsed.phone)}</a></span></div>
     <div class="detail-row"><span class="lbl">Room / Location</span><span class="val">${esc(t.room)}</span></div>
     <div class="detail-row"><span class="lbl">Category</span><span class="val">${esc(t.category)}</span></div>
-    <div class="detail-row"><span class="lbl">Priority</span><span class="val">${t.priority === 'urgent' ? '🔴 Urgent' : '🟢 Regular'}</span></div>
     <div class="detail-row"><span class="lbl">Submitted</span><span class="val">${fmtDate(t.createdAt)}</span></div>
     <div class="detail-row" style="flex-direction:column"><span class="lbl" style="margin-bottom:4px">Description</span><span class="val" style="white-space:pre-wrap">${esc(t.description)}</span></div>
     ${mediaHtml}
@@ -512,10 +508,11 @@ function openModal(id) {
 
     <div class="section-label">Notes <span style="font-weight:400;color:#bbb;font-size:.78rem;text-transform:none;letter-spacing:0">(optional)</span></div>
     <textarea class="notes-area" id="notesArea" placeholder="Add notes here…">${esc(t.notes)}</textarea>
-    <button id="saveNotes" onclick="saveAll()" style="margin-top:10px">💾 Save</button>
+    <button id="saveNotes" style="margin-top:10px">💾 Save</button>
   `;
 
   document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('saveNotes').addEventListener('click', saveAll);
 }
 
 function closeModal() {
