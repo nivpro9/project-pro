@@ -1,6 +1,7 @@
-const express = require('express');
-const path = require('path');
+const express  = require('express');
+const path     = require('path');
 const { Pool } = require('pg');
+// Email will be added later via Resend
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -63,8 +64,9 @@ async function initDB() {
     ['in_progress_at',  'BIGINT DEFAULT 0'],
     ['resolved_by',     "TEXT DEFAULT ''"],
     ['resolved_at',     'BIGINT DEFAULT 0'],
-    ['worker_number',   "TEXT DEFAULT ''"],
-    ['passport_number', "TEXT DEFAULT ''"],
+    ['worker_number',    "TEXT DEFAULT ''"],
+    ['passport_number',  "TEXT DEFAULT ''"],
+    ['reminder_sent_at', 'BIGINT DEFAULT 0'],
   ];
   for (const [col, type] of cols) {
     await pool.query(`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ${col} ${type}`).catch(()=>{});
