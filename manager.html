@@ -401,16 +401,21 @@ function statusLabel(s) {
 
 // ── Fetch & render ────────────────────────────────────
 async function fetchTickets(showLoader = false) {
-  try {
-    if (showLoader) {
-      document.getElementById('loadingSpinner').style.display = 'block';
-      document.getElementById('ticketList').style.display = 'none';
-    }
-    const res = await fetch('/api/tickets');
-    allTickets = await res.json();
+  const spinner = document.getElementById('loadingSpinner');
+  const list    = document.getElementById('ticketList');
 
-    document.getElementById('countNew').textContent      = allTickets.filter(t=>t.status==='new').length;
-    document.getElementById('countInProg').textContent   = allTickets.filter(t=>t.status==='in-progress').length;
+  if (showLoader) spinner.style.display = 'block';
+
+  try {
+    const res  = await fetch('/api/tickets?t=' + Date.now());
+    const data = await res.json();
+
+    // Make sure we got a real array back
+    if (!Array.isArray(data)) throw new Error('Bad response');
+    allTickets = data;
+
+    document.getElementById('countNew').textContent    = allTickets.filter(t=>t.status==='new').length;
+    document.getElementById('countInProg').textContent = allTickets.filter(t=>t.status==='in-progress').length;
     document.getElementById('countResolved').textContent = allTickets.filter(t=>t.status==='resolved').length;
 
     if (prevCount >= 0 && allTickets.length > prevCount) {
@@ -419,12 +424,12 @@ async function fetchTickets(showLoader = false) {
     }
     prevCount = allTickets.length;
 
-    document.getElementById('loadingSpinner').style.display = 'none';
-    document.getElementById('ticketList').style.display = 'block';
+  } catch(e) {
+    console.error('fetchTickets error:', e);
+  } finally {
+    spinner.style.display = 'none';
+    list.style.display    = 'block';
     renderTickets();
-  } catch {
-    document.getElementById('loadingSpinner').style.display = 'none';
-    document.getElementById('ticketList').style.display = 'block';
   }
 }
 
