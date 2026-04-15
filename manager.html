@@ -539,7 +539,7 @@ function openModal(id) {
         <div class="val"><a href="tel:${esc(parsed.phone)}">${esc(parsed.phone)}</a></div>
       </div>
       <div class="detail-cell">
-        <div class="lbl">Room / Location</div>
+        <div class="lbl">Location</div>
         <div class="val">${esc(t.room)}</div>
       </div>
       <div class="detail-cell full">
@@ -639,59 +639,89 @@ function closeExport() {
   document.getElementById('exportOverlay').classList.remove('open');
 }
 
+function xlCell(v, isHeader) {
+  const val = String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if (isHeader) return `<Cell ss:StyleID="h"><Data ss:Type="String">${val}</Data></Cell>`;
+  // detect date strings
+  if (/^\d{1,2}[./]\d{1,2}[./]\d{4}/.test(val))
+    return `<Cell ss:StyleID="d"><Data ss:Type="String">${val}</Data></Cell>`;
+  return `<Cell><Data ss:Type="String">${val}</Data></Cell>`;
+}
+
 function doExport() {
   const fromVal = document.getElementById('exportFrom').value;
   const toVal   = document.getElementById('exportTo').value;
 
   let tickets = [...allTickets];
-
-  if (fromVal) {
-    const from = new Date(fromVal); from.setHours(0,0,0,0);
-    tickets = tickets.filter(t => new Date(t.createdAt) >= from);
-  }
-  if (toVal) {
-    const to = new Date(toVal); to.setHours(23,59,59,999);
-    tickets = tickets.filter(t => new Date(t.createdAt) <= to);
-  }
-
+  if (fromVal) { const f = new Date(fromVal); f.setHours(0,0,0,0);   tickets = tickets.filter(t => new Date(t.createdAt) >= f); }
+  if (toVal)   { const f = new Date(toVal);   f.setHours(23,59,59,999); tickets = tickets.filter(t => new Date(t.createdAt) <= f); }
   if (!tickets.length) { showToast('No tickets in selected date range'); return; }
 
-  const headers = [
-    'ID','Worker Name','Worker Number','Passport Number','Phone',
-    'Room','Category','Priority','Status','Description','Notes',
-    'Created At','Updated At',
-    'Assigned To',
-    'In Progress By','In Progress At',
-    'Resolved By','Resolved At'
+  const COLS = [
+    'ID', 'Worker Name', 'Worker Number', 'Passport Number', 'Phone',
+    'Location', 'Category', 'Status', 'Description', 'Notes',
+    'Created At', 'Updated At',
+    'In Progress By', 'In Progress At',
+    'Resolved By', 'Resolved At'
   ];
 
-  const rows = tickets.map(t => [
-    t.id,
-    t.workerName,
-    t.workerNumber   || '',
-    t.passportNumber || '',
-    t.workerPhone,
-    t.room,
-    t.category,
-    t.priority,
-    t.status,
-    (t.description || '').replace(/\n/g,' '),
-    (t.notes || '').replace(/\n/g,' '),
-    fmtDate(t.createdAt),
-    fmtDate(t.updatedAt),
-    t.assignedTo    || '',
-    t.inProgressBy  || '',
-    t.inProgressAt  ? fmtDate(t.inProgressAt) : '',
-    t.resolvedBy    || '',
-    t.resolvedAt    ? fmtDate(t.resolvedAt) : ''
-  ].map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  const headerRow = '<Row>' + COLS.map(h => xlCell(h, true)).join('') + '</Row>';
 
-  const csv  = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const dataRows = tickets.map(t => {
+    const p = parseOldPhone(t);
+    const ipBy  = t.inProgressBy && t.inProgressBy !== '0' ? t.inProgressBy : '';
+    const resBy = t.resolvedBy   && t.resolvedBy   !== '0' ? t.resolvedBy   : '';
+    const cols = [
+      t.id,
+      t.workerName,
+      p.workerNumber,
+      p.passportNumber,
+      p.phone,
+      t.room,
+      t.category,
+      t.status === 'new' ? 'New' : t.status === 'in-progress' ? 'In Progress' : 'Resolved',
+      (t.description || '').replace(/\n/g,' '),
+      (t.notes       || '').replace(/\n/g,' '),
+      fmtDate(t.createdAt),
+      fmtDate(t.updatedAt),
+      ipBy,
+      ipBy  ? fmtDate(t.inProgressAt) : '',
+      resBy,
+      resBy ? fmtDate(t.resolvedAt)   : ''
+    ];
+    return '<Row>' + cols.map(v => xlCell(v, false)).join('') + '</Row>';
+  }).join('');
+
+  const colWidth = COLS.map(() => '<Column ss:Width="130"/>').join('');
+  const numCols  = COLS.length;
+  const lastCol  = String.fromCharCode(64 + numCols); // e.g. "P"
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:x="urn:schemas-microsoft-com:office:excel">
+ <Styles>
+  <Style ss:ID="h">
+   <Alignment ss:Horizontal="Center"/>
+   <Font ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#16213E" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="d">
+   <NumberFormat ss:Format="DD/MM/YYYY HH:MM"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Project Pro">
+  <Table>${colWidth}${headerRow}${dataRows}</Table>
+  <AutoFilter ss:Range="R1C1:R1C${numCols}" xmlns="urn:schemas-microsoft-com:office:excel"/>
+ </Worksheet>
+</Workbook>`;
+
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `project-pro-${fromVal||'all'}-to-${toVal||'all'}.csv`;
+  a.download = `project-pro-${fromVal||'all'}-to-${toVal||'all'}.xls`;
   a.click();
   URL.revokeObjectURL(url);
   closeExport();
