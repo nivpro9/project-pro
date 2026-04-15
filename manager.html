@@ -233,6 +233,12 @@
       <button class="filter-btn" data-filter="resolved" onclick="setFilter(this)">✅ Resolved</button>
     </div>
 
+    <!-- Loading spinner -->
+    <div id="loadingSpinner" style="text-align:center;padding:60px 20px;color:#aaa;display:none">
+      <div style="font-size:2rem;margin-bottom:10px">⏳</div>
+      <div style="font-size:.9rem">Loading tickets...</div>
+    </div>
+
     <!-- Ticket list -->
     <div id="ticketList"></div>
   </div>
@@ -394,8 +400,12 @@ function statusLabel(s) {
 }
 
 // ── Fetch & render ────────────────────────────────────
-async function fetchTickets() {
+async function fetchTickets(showLoader = false) {
   try {
+    if (showLoader) {
+      document.getElementById('loadingSpinner').style.display = 'block';
+      document.getElementById('ticketList').style.display = 'none';
+    }
     const res = await fetch('/api/tickets');
     allTickets = await res.json();
 
@@ -409,8 +419,13 @@ async function fetchTickets() {
     }
     prevCount = allTickets.length;
 
+    document.getElementById('loadingSpinner').style.display = 'none';
+    document.getElementById('ticketList').style.display = 'block';
     renderTickets();
-  } catch {}
+  } catch {
+    document.getElementById('loadingSpinner').style.display = 'none';
+    document.getElementById('ticketList').style.display = 'block';
+  }
 }
 
 function renderTickets() {
@@ -547,26 +562,29 @@ function selectStatus(status) {
 
 async function saveAll() {
   if (!currentTicketId) return;
-  const notes  = document.getElementById('notesArea').value;
-  const body   = { notes };
+  const notes    = document.getElementById('notesArea').value;
+  const ticketId = currentTicketId;
+  const body     = { notes };
   if (pendingStatus) {
     body.status    = pendingStatus;
     body.handledBy = currentUser;
   }
-  await fetch(`/api/tickets/${currentTicketId}`, {
+  // Close immediately — don't wait for server
+  pendingStatus = null;
+  closeModal();
+  showToast('Saved ✓');
+  // Save + refresh in background
+  await fetch(`/api/tickets/${ticketId}`, {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(body)
   });
-  pendingStatus = null;
-  await fetchTickets();
-  closeModal();
-  showToast('Saved ✓');
+  fetchTickets();
 }
 
 // ── Polling ───────────────────────────────────────────
 function startPolling() {
-  fetchTickets();
+  fetchTickets(true); // show loader on first load
   pollInterval = setInterval(fetchTickets, 5000);
 }
 
