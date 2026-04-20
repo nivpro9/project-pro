@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Project Pro – Manager Dashboard</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f2f5;min-height:100vh}
+
+  /* ── Login screens ── */
+  .login-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .login-screen.active{display:flex}
+  .login-screen .lock{font-size:3.5rem;margin-bottom:16px}
+  .login-screen h2{color:#16213e;font-size:1.4rem;margin-bottom:6px}
+  .login-screen p{color:#888;font-size:.9rem;margin-bottom:24px;text-align:center}
+
+  /* User selection */
+  .user-buttons{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+  .user-btn{width:160px;padding:22px 10px;border:3px solid #e5e7eb;border-radius:14px;background:#fff;cursor:pointer;transition:all .2s;text-align:center}
+  .user-btn:hover{border-color:#e85d04;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+  .user-btn .user-avatar{font-size:2.8rem;margin-bottom:8px}
+  .user-btn .user-name{font-size:1rem;font-weight:800;color:#16213e}
+  .user-btn .user-role{font-size:.75rem;color:#888;margin-top:2px}
+  .user-btn.test-btn{border-style:dashed;border-color:#d1d5db;opacity:.75}
+  .user-btn.test-btn:hover{border-color:#f97316;opacity:1}
+  .user-btn.test-btn .user-name{color:#f97316}
+  .user-btn.test-btn .user-role{color:#f97316;opacity:.7}
+
+  /* PIN */
+  #pinInput{border:2px solid #e5e7eb;border-radius:10px;padding:14px 20px;font-size:1.6rem;text-align:center;letter-spacing:8px;width:200px;outline:none;transition:border-color .2s}
+  #pinInput:focus{border-color:#e85d04}
+  #pinBtn{margin-top:14px;background:#e85d04;color:#fff;border:none;padding:13px 40px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;width:200px}
+  #pinBtn:hover{background:#c44c00}
+  #pinError{color:#ef4444;font-size:.85rem;margin-top:10px;min-height:20px}
+  #backToUsers{background:none;border:none;color:#888;font-size:.85rem;cursor:pointer;margin-top:12px;text-decoration:underline}
+  #backToUsers:hover{color:#e85d04}
+
+  /* ── Header ── */
+  header{background:#16213e;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  header .logo-titles{display:flex;align-items:center;gap:14px}
+  header .titles{color:#fff}
+  header .titles h1{font-size:1.1rem;font-weight:700}
+  header .titles p{font-size:.75rem;color:#aab}
+  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  #currentUserBadge{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:6px 14px;border-radius:7px;font-size:.85rem;font-weight:700}
+  #exportBtn{background:#22c55e;color:#fff;border:none;padding:7px 16px;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600}
+  #exportBtn:hover{background:#16a34a}
+  #logoutBtn{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);padding:7px 16px;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600}
+  #logoutBtn:hover{background:rgba(255,255,255,.2)}
+
+  /* ── Dashboard ── */
+  #dashboard{display:none}
+  .dash-body{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .stat-card{background:#fff;border-radius:12px;padding:16px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+  .stat-card .num{font-size:2rem;font-weight:900;line-height:1}
+  .stat-card .lbl{font-size:.75rem;color:#888;margin-top:4px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+  .stat-card.new .num{color:#ef4444}
+  .stat-card.inprog .num{color:#f97316}
+  .stat-card.resolved .num{color:#22c55e}
+
+  /* Filter tabs */
+  .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .filter-btn{border:2px solid #e5e7eb;background:#fff;border-radius:20px;padding:7px 16px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;color:#555}
+  .filter-btn:hover{border-color:#e85d04;color:#e85d04}
+  .filter-btn.active{background:#e85d04;border-color:#e85d04;color:#fff}
+
+  /* Ticket cards */
+  .ticket-card{background:#fff;border-radius:12px;margin-bottom:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.07);border-left:5px solid #ccc;cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .ticket-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+  .ticket-card.urgent{border-left-color:#ef4444}
+  .ticket-card.regular{border-left-color:#22c55e}
+  .tc-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .tc-id{font-size:.8rem;font-weight:800;color:#16213e;background:#f0f2f5;padding:3px 8px;border-radius:5px}
+  .badge{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:20px}
+  .badge.urgent{background:#fef2f2;color:#ef4444}
+  .badge.regular{background:#f0fdf4;color:#22c55e}
+  .badge.new{background:#eff6ff;color:#3b82f6}
+  .badge.in-progress{background:#fff7ed;color:#f97316}
+  .badge.resolved{background:#f0fdf4;color:#22c55e}
+  .tc-meta{font-size:.82rem;color:#555;margin-bottom:4px}
+  .tc-meta strong{color:#222}
+  .tc-handler{font-size:.78rem;color:#e85d04;font-weight:600;margin-bottom:4px}
+  .tc-desc{font-size:.83rem;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .tc-time{font-size:.75rem;color:#bbb;margin-top:6px}
+
+  /* Empty state */
+  .empty{text-align:center;padding:60px 20px;color:#aaa}
+  .empty div{font-size:2.5rem;margin-bottom:12px}
+
+  /* Toast */
+  #toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#16213e;color:#fff;padding:10px 22px;border-radius:8px;font-size:.9rem;font-weight:600;z-index:9999;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap}
+  #toast.show{opacity:1}
+
+  /* Modal */
+  #modalOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+  #modalOverlay.open{display:flex}
+  #modal{background:#fff;border-radius:16px;width:100%;max-width:600px;margin:auto;overflow:hidden}
+  .modal-header{background:#16213e;color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+  .modal-header h2{font-size:1rem;font-weight:700}
+  #closeModal{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;line-height:1;padding:0 4px}
+  .modal-body{padding:0}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #f0f2f5}
+  .detail-cell{padding:11px 18px;border-bottom:1px solid #f0f2f5;font-size:.86rem}
+  .detail-cell.full{grid-column:1/-1}
+  .detail-cell .lbl{font-size:.7rem;font-weight:800;letter-spacing:.8px;color:#aaa;text-transform:uppercase;margin-bottom:3px}
+  .detail-cell .val{color:#16213e;font-weight:600;word-break:break-word}
+  .detail-cell .val a{color:#e85d04;text-decoration:none;font-weight:700}
+  .modal-actions{padding:16px 18px}
+  .modal-media{margin:14px 0}
+  .modal-media img{max-width:100%;border-radius:8px;cursor:pointer}
+  .modal-media video{max-width:100%;border-radius:8px}
+  .modal-media a{display:inline-block;margin-top:8px;font-size:.82rem;color:#e85d04;font-weight:600}
+  .section-label{font-size:.72rem;font-weight:800;letter-spacing:1.2px;color:#888;text-transform:uppercase;margin:16px 0 8px}
+  .status-row{display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap}
+  .status-btn{border:2px solid #e5e7eb;background:#f9fafb;border-radius:8px;padding:9px 18px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s}
+  .status-btn:hover{border-color:#888}
+  .status-btn.active-new{border-color:#3b82f6;background:#eff6ff;color:#3b82f6}
+  .status-btn.active-inprog{border-color:#f97316;background:#fff7ed;color:#f97316}
+  .status-btn.active-resolved{border-color:#22c55e;background:#f0fdf4;color:#22c55e}
+
+  .handler-info{font-size:.83rem;color:#555}
+  .handler-info .handler-row{display:flex;gap:8px;margin-bottom:6px;align-items:baseline}
+  .handler-info .handler-row:last-child{margin-bottom:0}
+  .handler-info .h-lbl{font-size:.7rem;font-weight:800;letter-spacing:.8px;color:#aaa;text-transform:uppercase;min-width:120px}
+  .handler-info .h-val{color:#16213e;font-weight:600}
+
+  .notes-area{width:100%;border:2px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:.88rem;font-family:inherit;min-height:90px;resize:vertical;outline:none}
+  .notes-area:focus{border-color:#e85d04}
+  #saveNotes{background:#16213e;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:.88rem;font-weight:700;cursor:pointer;margin-top:8px}
+  #saveNotes:hover{background:#0f3460}
+
+  /* Export modal */
+  #exportOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:20px}
+  #exportOverlay.open{display:flex}
+  #exportModal{background:#fff;border-radius:16px;width:100%;max-width:400px;overflow:hidden}
+  #exportModal .modal-header{background:#16213e;color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+  #exportModal .modal-header h2{font-size:1rem;font-weight:700}
+  #exportModal .modal-body{padding:20px}
+  .date-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .date-row label{display:block;font-size:.8rem;font-weight:700;color:#555;margin-bottom:5px}
+  .date-row input{width:100%;border:2px solid #e5e7eb;border-radius:8px;padding:9px 10px;font-size:.88rem;outline:none}
+  .date-row input:focus{border-color:#e85d04}
+  #doExportBtn{width:100%;background:#22c55e;color:#fff;border:none;padding:13px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer}
+  #doExportBtn:hover{background:#16a34a}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ── SCREEN 1: Choose User ── -->
+<div class="login-screen active" id="userScreen">
+  <div class="lock">👷</div>
+  <h2>Who are you?</h2>
+  <p>Select your name to continue</p>
+  <div class="user-buttons">
+    <div class="user-btn" onclick="selectUser('Hannoch')">
+      <div class="user-avatar">👤</div>
+      <div class="user-name">Hannoch</div>
+      <div class="user-role">Logistics Manager</div>
+    </div>
+    <div class="user-btn" onclick="selectUser('Aharon')">
+      <div class="user-avatar">👤</div>
+      <div class="user-name">Aharon</div>
+      <div class="user-role">Logistics Manager</div>
+    </div>
+    <div class="user-btn" onclick="selectUser('Gal')">
+      <div class="user-avatar">👤</div>
+      <div class="user-name">Gal</div>
+      <div class="user-role">Logistics Manager</div>
+    </div>
+    <div class="user-btn test-btn" onclick="selectUser('Test')">
+      <div class="user-avatar">🧪</div>
+      <div class="user-name">Test</div>
+      <div class="user-role">System Testing</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCREEN 2: PIN ── -->
+<div class="login-screen" id="pinScreen">
+  <div class="lock">🔒</div>
+  <h2 id="pinTitle">Enter PIN</h2>
+  <p id="pinSubtitle">Enter your personal PIN to continue</p>
+  <input type="password" id="pinInput" maxlength="4" placeholder="••••" inputmode="numeric" onkeydown="if(event.key==='Enter')checkPin()"/>
+  <button id="pinBtn" onclick="checkPin()">Unlock</button>
+  <div id="pinError"></div>
+  <button id="backToUsers" onclick="goBack()">← Choose a different user</button>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard">
+  <header>
+    <div class="logo-titles">
+      <svg viewBox="0 0 430 95" height="28px" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="10,40 34,26 58,40 34,54" fill="#5B8DD9"/>
+        <polygon points="10,40 34,54 34,82 10,68" fill="#2E6DB4"/>
+        <polygon points="34,54 58,40 58,68 34,82" fill="#1A5499"/>
+        <polygon points="28,16 52,2 76,16 52,30" fill="#66BB6A"/>
+        <polygon points="28,16 52,30 52,58 28,44" fill="#388E3C"/>
+        <polygon points="52,30 76,16 76,44 52,58" fill="#2E7D32"/>
+        <text x="88" y="64" font-size="50" font-weight="bold" fill="#2E6DB4" font-family="Trebuchet MS">Project Pro</text>
+        <text x="88" y="88" font-size="18" fill="#388E3C" font-style="italic" font-family="Georgia">Since 2013</text>
+        <text x="340" y="88" font-size="18" fill="#388E3C" font-style="italic" font-family="Georgia">group</text>
+      </svg>
+      <div class="titles">
+        <h1>Manager Dashboard</h1>
+        <p>Logistics control panel</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="currentUserBadge">👤 —</span>
+      <button id="exportBtn" onclick="openExport()">📊 Export to Excel</button>
+      <button id="logoutBtn" onclick="logout()">🔒 Logout</button>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card new"><div class="num" id="countNew">0</div><div class="lbl">New</div></div>
+      <div class="stat-card inprog"><div class="num" id="countInProg">0</div><div class="lbl">In Progress</div></div>
+      <div class="stat-card resolved"><div class="num" id="countResolved">0</div><div class="lbl">Resolved</div></div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter(this)">All</button>
+      <button class="filter-btn" data-filter="new" onclick="setFilter(this)">🔴 New</button>
+      <button class="filter-btn" data-filter="in-progress" onclick="setFilter(this)">🟡 In Progress</button>
+      <button class="filter-btn" data-filter="resolved" onclick="setFilter(this)">✅ Resolved</button>
+    </div>
+
+    <!-- Loading spinner -->
+    <div id="loadingSpinner" style="text-align:center;padding:60px 20px;color:#aaa;display:none">
+      <div style="font-size:2rem;margin-bottom:10px">⏳</div>
+      <div style="font-size:.9rem">Loading tickets...</div>
+    </div>
+
+    <!-- Ticket list -->
+    <div id="ticketList"></div>
+  </div>
+</div>
+
+<!-- ── Export Modal ── -->
+<div id="exportOverlay" onclick="if(event.target===this)closeExport()">
+  <div id="exportModal">
+    <div class="modal-header">
+      <h2>📊 Export to Excel</h2>
+      <button onclick="closeExport()" style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.85rem;color:#555;margin-bottom:16px">Select date range (or leave empty to export all tickets)</p>
+      <div class="date-row">
+        <div>
+          <label>From Date</label>
+          <input type="date" id="exportFrom"/>
+        </div>
+        <div>
+          <label>To Date</label>
+          <input type="date" id="exportTo"/>
+        </div>
+      </div>
+      <button id="doExportBtn" onclick="doExport()">⬇ Download Excel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Detail Modal ── -->
+<div id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div id="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Ticket Details</h2>
+      <button id="closeModal" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ── User / PIN config ─────────────────────────────────
+const USERS = {
+  Hannoch: { pin: '1234', emoji: '👤' },
+  Aharon:  { pin: '1212', emoji: '👤' },
+  Gal:     { pin: '2222', emoji: '👤' },
+  Test:    { pin: '1111', emoji: '🧪' }
+};
+
+let currentUser = null;
+let allTickets  = [];
+let currentFilter = 'all';
+let currentTicketId = null;
+let prevCount = -1;
+let audioCtx  = null;
+let pollInterval;
+
+// ── Login flow ────────────────────────────────────────
+function selectUser(name) {
+  currentUser = name;
+  document.getElementById('pinTitle').textContent    = `Hello, ${name}!`;
+  document.getElementById('pinSubtitle').textContent = 'Enter your PIN to continue';
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent    = '';
+  document.getElementById('userScreen').classList.remove('active');
+  document.getElementById('pinScreen').classList.add('active');
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+
+function goBack() {
+  currentUser = null;
+  document.getElementById('pinScreen').classList.remove('active');
+  document.getElementById('userScreen').classList.add('active');
+}
+
+function checkPin() {
+  const val = document.getElementById('pinInput').value;
+  if (currentUser && val === USERS[currentUser].pin) {
+    document.getElementById('pinScreen').classList.remove('active');
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('currentUserBadge').textContent = `${USERS[currentUser].emoji} ${currentUser}`;
+    startPolling();
+  } else {
+    document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
+    document.getElementById('pinInput').value = '';
+  }
+}
+
+function logout() {
+  clearInterval(pollInterval);
+  currentUser = null;
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('pinScreen').classList.remove('active');
+  document.getElementById('userScreen').classList.add('active');
+}
+
+// ── Toast ─────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── Audio beep ────────────────────────────────────────
+function playBeep() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'sine'; osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+  } catch {}
+}
+
+// ── Helpers ───────────────────────────────────────────
+function timeAgo(ts) {
+  if (!ts) return '—';
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+function fmtDate(ts) {
+  if (!ts || ts === 0) return '—';
+  return new Date(ts).toLocaleString();
+}
+
+// Parse old phone format: "Worker#111 | Passport:0638426 | Tel:0509022661"
+function parseOldPhone(t) {
+  const phone = t.workerPhone || '';
+  const oldFmt = /Worker#([^|]+)\|.*Passport:([^|]+)\|.*Tel:(.+)/i;
+  const m = phone.match(oldFmt);
+  if (m) {
+    return {
+      workerNumber:   t.workerNumber   || m[1].trim(),
+      passportNumber: t.passportNumber || m[2].trim(),
+      phone:          m[3].trim()
+    };
+  }
+  return {
+    workerNumber:   t.workerNumber   || '—',
+    passportNumber: t.passportNumber || '—',
+    phone:          phone || '—'
+  };
+}
+
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function statusLabel(s) {
+  return s === 'new' ? '🔵 New' : s === 'in-progress' ? '🟡 In Progress' : '✅ Resolved';
+}
+
+// ── Fetch & render ────────────────────────────────────
+async function fetchTickets(showLoader = false) {
+  const spinner = document.getElementById('loadingSpinner');
+  const list    = document.getElementById('ticketList');
+
+  if (showLoader) spinner.style.display = 'block';
+
+  try {
+    const res  = await fetch('/api/tickets?t=' + Date.now());
+    const data = await res.json();
+
+    // Make sure we got a real array back
+    if (!Array.isArray(data)) throw new Error('Bad response');
+    allTickets = data;
+
+    document.getElementById('countNew').textContent    = allTickets.filter(t=>t.status==='new').length;
+    document.getElementById('countInProg').textContent = allTickets.filter(t=>t.status==='in-progress').length;
+    document.getElementById('countResolved').textContent = allTickets.filter(t=>t.status==='resolved').length;
+
+    if (prevCount >= 0 && allTickets.length > prevCount) {
+      playBeep();
+      showToast('🔔 New request received!');
+    }
+    prevCount = allTickets.length;
+
+  } catch(e) {
+    console.error('fetchTickets error:', e);
+  } finally {
+    spinner.style.display = 'none';
+    list.style.display    = 'block';
+    renderTickets();
+  }
+}
+
+function renderTickets() {
+  let list = allTickets;
+  if (currentFilter !== 'all') list = list.filter(t => t.status === currentFilter);
+
+  const el = document.getElementById('ticketList');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div>📭</div>No tickets here yet.</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(t => {
+    let handlerLine = '';
+    if (t.assignedTo)   handlerLine = `<div class="tc-handler">👷 Assigned to: ${esc(t.assignedTo)}</div>`;
+    if (t.inProgressBy) handlerLine = `<div class="tc-handler">🔧 Handled by: ${esc(t.inProgressBy)}</div>`;
+    if (t.resolvedBy)   handlerLine = `<div class="tc-handler">✅ Resolved by: ${esc(t.resolvedBy)}</div>`;
+
+    return `
+      <div class="ticket-card" onclick="openModal('${t.id}')">
+        <div class="tc-top">
+          <span class="tc-id">${t.id}</span>
+          <span class="badge ${t.status}">${statusLabel(t.status)}</span>
+        </div>
+        <div class="tc-meta"><strong>${esc(t.workerName)}</strong> &nbsp;·&nbsp; ${esc(t.room)} &nbsp;·&nbsp; ${esc(t.category)}</div>
+        ${handlerLine}
+        <div class="tc-desc">${esc(t.description)}</div>
+        <div class="tc-time">${timeAgo(t.createdAt)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function setFilter(btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.filter;
+  renderTickets();
+}
+
+// ── Modal ─────────────────────────────────────────────
+function openModal(id) {
+  currentTicketId = id;
+  const t = allTickets.find(x => x.id === id);
+  if (!t) return;
+
+  document.getElementById('modalTitle').textContent = `Ticket ${t.id}`;
+
+  // Media
+  let mediaHtml = '';
+  if (t.mediaBase64) {
+    if (t.mediaType && t.mediaType.startsWith('image/')) {
+      mediaHtml = `
+        <div class="section-label">Attachment</div>
+        <div class="modal-media">
+          <img src="${t.mediaBase64}" alt="attachment" onclick="window.open(this.src,'_blank')"/>
+          <a href="${t.mediaBase64}" download="attachment">⬇ Download</a>
+        </div>`;
+    } else {
+      mediaHtml = `
+        <div class="section-label">Attachment</div>
+        <div class="modal-media">
+          <video src="${t.mediaBase64}" controls></video>
+          <a href="${t.mediaBase64}" download="attachment">⬇ Download video</a>
+        </div>`;
+    }
+  }
+
+  // Handler history (read-only, shows who did what)
+  // Guard against legacy "0" values stored before the feature was added
+  const ipBy  = t.inProgressBy && t.inProgressBy !== '0' ? t.inProgressBy : '';
+  const resBy = t.resolvedBy   && t.resolvedBy   !== '0' ? t.resolvedBy   : '';
+  let handlerHistory = '';
+  if (ipBy || resBy) {
+    handlerHistory = `<div class="handler-info">`;
+    if (ipBy)  handlerHistory += `<div class="handler-row"><span class="h-lbl">🔧 In Progress by:</span><span class="h-val">${esc(ipBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.inProgressAt)}</span></span></div>`;
+    if (resBy) handlerHistory += `<div class="handler-row"><span class="h-lbl">✅ Resolved by:</span><span class="h-val">${esc(resBy)} &nbsp;<span style="color:#bbb;font-size:.78rem">${fmtDate(t.resolvedAt)}</span></span></div>`;
+    handlerHistory += `</div>`;
+  }
+
+  const parsed = parseOldPhone(t);
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-cell">
+        <div class="lbl">Worker</div>
+        <div class="val">${esc(t.workerName)}</div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Submitted</div>
+        <div class="val">${fmtDate(t.createdAt)}</div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Worker Number</div>
+        <div class="val">${esc(parsed.workerNumber)}</div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Passport</div>
+        <div class="val">${esc(parsed.passportNumber)}</div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Phone</div>
+        <div class="val"><a href="tel:${esc(parsed.phone)}">${esc(parsed.phone)}</a></div>
+      </div>
+      <div class="detail-cell">
+        <div class="lbl">Location</div>
+        <div class="val">${esc(t.room)}</div>
+      </div>
+      <div class="detail-cell full">
+        <div class="lbl">Category</div>
+        <div class="val">${esc(t.category)}</div>
+      </div>
+      ${t.description ? `
+      <div class="detail-cell full">
+        <div class="lbl">Description</div>
+        <div class="val" style="white-space:pre-wrap">${esc(t.description)}</div>
+      </div>` : ''}
+    </div>
+
+    ${mediaHtml ? `<div style="padding:14px 18px;border-bottom:1px solid #f0f2f5">${mediaHtml}</div>` : ''}
+
+    ${handlerHistory ? `<div style="padding:12px 18px;border-bottom:1px solid #f0f2f5">${handlerHistory}</div>` : ''}
+
+    <div class="modal-actions">
+      <div class="section-label" style="margin-top:0">Status</div>
+      <div class="status-row">
+        <button class="status-btn ${t.status==='new'?'active-new':''}" id="sBtn-new" onclick="selectStatus('new')">🔵 New</button>
+        <button class="status-btn ${t.status==='in-progress'?'active-inprog':''}" id="sBtn-in-progress" onclick="selectStatus('in-progress')">🟡 In Progress</button>
+        <button class="status-btn ${t.status==='resolved'?'active-resolved':''}" id="sBtn-resolved" onclick="selectStatus('resolved')">✅ Resolved</button>
+      </div>
+      <div class="section-label">Notes <span style="font-weight:400;color:#bbb;font-size:.78rem;text-transform:none;letter-spacing:0">(optional)</span></div>
+      <textarea class="notes-area" id="notesArea" placeholder="Add notes here…">${esc(t.notes)}</textarea>
+      <button id="saveNotes" style="margin-top:10px;width:100%;background:#16213e;color:#fff;border:none;padding:13px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">💾 Save</button>
+    </div>
+  `;
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('saveNotes').addEventListener('click', saveAll);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  currentTicketId = null;
+  pendingStatus   = null;
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+
+let pendingStatus = null;
+
+function selectStatus(status) {
+  pendingStatus = status;
+  // Update button highlight only — don't save yet
+  document.querySelectorAll('.status-btn').forEach(b => {
+    b.classList.remove('active-new','active-inprog','active-resolved');
+  });
+  const map = { 'new':'active-new', 'in-progress':'active-inprog', 'resolved':'active-resolved' };
+  const btn = document.getElementById('sBtn-' + status);
+  if (btn) btn.classList.add(map[status]);
+}
+
+async function saveAll() {
+  if (!currentTicketId) return;
+  const notes    = document.getElementById('notesArea').value;
+  const ticketId = currentTicketId;
+  const body     = { notes };
+  if (pendingStatus) {
+    body.status    = pendingStatus;
+    body.handledBy = currentUser;
+  }
+  // Close immediately — don't wait for server
+  pendingStatus = null;
+  closeModal();
+  showToast('Saved ✓');
+  // Save + refresh in background
+  await fetch(`/api/tickets/${ticketId}`, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  fetchTickets();
+}
+
+// ── Polling ───────────────────────────────────────────
+function startPolling() {
+  fetchTickets(true); // show loader on first load
+  pollInterval = setInterval(fetchTickets, 5000);
+}
+
+// ── Export to Excel ───────────────────────────────────
+function openExport() {
+  const today = new Date();
+  const from  = new Date(today); from.setDate(from.getDate() - 30);
+  document.getElementById('exportTo').value   = today.toISOString().split('T')[0];
+  document.getElementById('exportFrom').value = from.toISOString().split('T')[0];
+  document.getElementById('exportOverlay').classList.add('open');
+}
+
+function closeExport() {
+  document.getElementById('exportOverlay').classList.remove('open');
+}
+
+function xlCell(v, isHeader) {
+  const val = String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if (isHeader) return `<Cell ss:StyleID="h"><Data ss:Type="String">${val}</Data></Cell>`;
+  // detect date strings
+  if (/^\d{1,2}[./]\d{1,2}[./]\d{4}/.test(val))
+    return `<Cell ss:StyleID="d"><Data ss:Type="String">${val}</Data></Cell>`;
+  return `<Cell><Data ss:Type="String">${val}</Data></Cell>`;
+}
+
+function doExport() {
+  const fromVal = document.getElementById('exportFrom').value;
+  const toVal   = document.getElementById('exportTo').value;
+
+  let tickets = [...allTickets];
+  if (fromVal) { const f = new Date(fromVal); f.setHours(0,0,0,0);   tickets = tickets.filter(t => new Date(t.createdAt) >= f); }
+  if (toVal)   { const f = new Date(toVal);   f.setHours(23,59,59,999); tickets = tickets.filter(t => new Date(t.createdAt) <= f); }
+  if (!tickets.length) { showToast('No tickets in selected date range'); return; }
+
+  const COLS = [
+    'ID', 'Worker Name', 'Worker Number', 'Passport Number', 'Phone',
+    'Location', 'Category', 'Status', 'Description', 'Notes',
+    'Created At', 'Updated At',
+    'In Progress By', 'In Progress At',
+    'Resolved By', 'Resolved At'
+  ];
+
+  const headerRow = '<Row>' + COLS.map(h => xlCell(h, true)).join('') + '</Row>';
+
+  const dataRows = tickets.map(t => {
+    const p = parseOldPhone(t);
+    const ipBy  = t.inProgressBy && t.inProgressBy !== '0' ? t.inProgressBy : '';
+    const resBy = t.resolvedBy   && t.resolvedBy   !== '0' ? t.resolvedBy   : '';
+    const cols = [
+      t.id,
+      t.workerName,
+      p.workerNumber,
+      p.passportNumber,
+      p.phone,
+      t.room,
+      t.category,
+      t.status === 'new' ? 'New' : t.status === 'in-progress' ? 'In Progress' : 'Resolved',
+      (t.description || '').replace(/\n/g,' '),
+      (t.notes       || '').replace(/\n/g,' '),
+      fmtDate(t.createdAt),
+      fmtDate(t.updatedAt),
+      ipBy,
+      ipBy  ? fmtDate(t.inProgressAt) : '',
+      resBy,
+      resBy ? fmtDate(t.resolvedAt)   : ''
+    ];
+    return '<Row>' + cols.map(v => xlCell(v, false)).join('') + '</Row>';
+  }).join('');
+
+  const colWidth = COLS.map(() => '<Column ss:Width="130"/>').join('');
+  const numCols  = COLS.length;
+  const lastCol  = String.fromCharCode(64 + numCols); // e.g. "P"
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:x="urn:schemas-microsoft-com:office:excel">
+ <Styles>
+  <Style ss:ID="h">
+   <Alignment ss:Horizontal="Center"/>
+   <Font ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#16213E" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="d">
+   <NumberFormat ss:Format="DD/MM/YYYY HH:MM"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Project Pro">
+  <Table>${colWidth}${headerRow}${dataRows}</Table>
+  <AutoFilter ss:Range="R1C1:R1C${numCols}" xmlns="urn:schemas-microsoft-com:office:excel"/>
+ </Worksheet>
+</Workbook>`;
+
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `project-pro-${fromVal||'all'}-to-${toVal||'all'}.xls`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeExport();
+  showToast('✅ Excel file downloaded!');
+}
+</script>
+</body>
+</html>
