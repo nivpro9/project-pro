@@ -1,7 +1,9 @@
 const express  = require('express');
 const path     = require('path');
 const { Pool } = require('pg');
-// Email will be added later via Resend
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const ALERT_EMAIL    = process.env.ALERT_EMAIL    || '';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -230,8 +232,93 @@ app.patch('/api/tickets/:id', async (req, res) => {
   }
 });
 
+// ── Email alert for stale in-progress tickets ─────────
+async function sendStaleAlerts() {
+  if (!RESEND_API_KEY || !ALERT_EMAIL) return;
+  try {
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+    const cutoff     = Date.now() - SEVEN_DAYS;
+    const result     = await pool.query(
+      `SELECT * FROM tickets
+       WHERE status = 'in-progress'
+         AND updated_at < $1
+         AND (reminder_sent_at = 0 OR reminder_sent_at < $1)
+       ORDER BY updated_at ASC`,
+      [cutoff]
+    );
+    if (!result.rows.length) return;
+
+    const rows = result.rows.map(t => {
+      const days = Math.floor((Date.now() - Number(t.updated_at)) / 86400000);
+      return `
+        <tr>
+          <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:700">${t.id}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #eee">${t.worker_name || '—'}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #eee">${t.category || '—'}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #eee">${t.room || '—'}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#ef4444;font-weight:700">${days} days</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888">${t.in_progress_by || '—'}</td>
+        </tr>`;
+    }).join('');
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto">
+        <div style="background:#16213e;padding:20px 24px;border-radius:10px 10px 0 0">
+          <h1 style="color:#fff;margin:0;font-size:1.2rem">⚠️ Project Pro — Stale Tickets Alert</h1>
+          <p style="color:#aab;margin:6px 0 0;font-size:.85rem">The following requests have been In Progress for over 7 days</p>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;padding:20px">
+          <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+            <thead>
+              <tr style="background:#f0f2f5">
+                <th style="padding:8px 12px;text-align:left">ID</th>
+                <th style="padding:8px 12px;text-align:left">Worker</th>
+                <th style="padding:8px 12px;text-align:left">Category</th>
+                <th style="padding:8px 12px;text-align:left">Location</th>
+                <th style="padding:8px 12px;text-align:left">Waiting</th>
+                <th style="padding:8px 12px;text-align:left">Handled by</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <p style="margin-top:20px;font-size:.82rem;color:#888">
+            This alert is sent automatically when a ticket stays In Progress for more than 7 days without an update.
+          </p>
+        </div>
+      </div>`;
+
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type':  'application/json'
+      },
+      body: JSON.stringify({
+        from:    'Project Pro <onboarding@resend.dev>',
+        to:      [ALERT_EMAIL],
+        subject: `⚠️ ${result.rows.length} ticket(s) stuck In Progress for 7+ days`,
+        html
+      })
+    });
+
+    // Mark reminders as sent
+    const ids = result.rows.map(t => t.id);
+    await pool.query(
+      `UPDATE tickets SET reminder_sent_at = $1 WHERE id = ANY($2::text[])`,
+      [Date.now(), ids]
+    );
+    console.log(`✅ Sent stale alert for ${ids.length} ticket(s)`);
+  } catch (err) {
+    console.error('sendStaleAlerts error:', err);
+  }
+}
+
 initDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Project Pro → http://localhost:${PORT}`);
   });
+  // Check for stale tickets every hour
+  setInterval(sendStaleAlerts, 60 * 60 * 1000);
+  // Also run once 2 minutes after startup
+  setTimeout(sendStaleAlerts, 2 * 60 * 1000);
 }).catch(err => { console.error('DB init failed:', err); process.exit(1); });
