@@ -557,6 +557,8 @@ function openModal(id) {
 
     ${handlerHistory ? `<div style="padding:12px 18px;border-bottom:1px solid #f0f2f5">${handlerHistory}</div>` : ''}
 
+    <div id="clothingHistoryBanner" style="display:none;padding:10px 18px;background:#f8faff;border-top:1px solid #e5e7eb;font-size:.82rem"></div>
+
     <div class="modal-actions">
       <div class="section-label" style="margin-top:0">Status</div>
       <div class="status-row">
@@ -568,6 +570,30 @@ function openModal(id) {
       <button id="saveNotes" style="margin-top:10px;width:100%;background:#16213e;color:#fff;border:none;padding:13px;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">💾 Save</button>
     </div>
   `;
+
+  // If clothing ticket, fetch issuance history
+  const isClothing = t.category && t.category.toLowerCase().includes('clothing');
+  const workerNum  = parseOldPhone(t).workerNumber;
+  if (isClothing && workerNum && workerNum !== '—') {
+    fetch(`/api/clothing-check/${encodeURIComponent(workerNum)}`)
+      .then(r => r.json())
+      .then(chk => {
+        const banner = document.getElementById('clothingHistoryBanner');
+        if (!banner) return;
+        if (chk.lastIssuedAt && chk.lastIssuedAt > 0) {
+          const d = new Date(chk.lastIssuedAt).toLocaleString();
+          const blocked = chk.blocked;
+          banner.style.display = 'block';
+          banner.innerHTML = blocked
+            ? `<span style="color:#dc2626">⛔ Last issued: <b>${d}</b> — worker is currently blocked (6 months not passed)</span>
+               <button onclick="resetClothingBlock('${workerNum}')" style="margin-left:10px;background:#ef4444;color:#fff;border:none;padding:4px 12px;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer">Override block</button>`
+            : `<span style="color:#16a34a">✅ Last issued: <b>${d}</b> — eligible for new clothing</span>`;
+        } else {
+          banner.style.display = 'block';
+          banner.innerHTML = `<span style="color:#888">📋 No previous clothing issuance on record</span>`;
+        }
+      }).catch(() => {});
+  }
 
   document.getElementById('modalOverlay').classList.add('open');
   document.getElementById('saveNotes').addEventListener('click', saveAll);
@@ -617,6 +643,16 @@ async function saveAll() {
     body: JSON.stringify(body)
   });
   fetchTickets();
+}
+
+async function resetClothingBlock(workerNumber) {
+  if (!confirm(`Remove 6-month restriction for worker #${workerNumber}?`)) return;
+  await fetch(`/api/clothing-history/${encodeURIComponent(workerNumber)}`, { method: 'DELETE' });
+  const banner = document.getElementById('clothingHistoryBanner');
+  if (banner) {
+    banner.innerHTML = `<span style="color:#22c55e">✅ Restriction removed — worker can now submit a new clothing request.</span>`;
+  }
+  showToast('✅ Clothing restriction removed');
 }
 
 // ── Polling ───────────────────────────────────────────

@@ -55,6 +55,10 @@ async function initDB() {
       value INTEGER DEFAULT 0
     );
     INSERT INTO counter (id, value) VALUES (1, 0) ON CONFLICT DO NOTHING;
+    CREATE TABLE IF NOT EXISTS clothing_history (
+      worker_number TEXT PRIMARY KEY,
+      last_issued_at BIGINT DEFAULT 0
+    );
   `);
 
   // Add new columns if upgrading from old schema
@@ -108,6 +112,35 @@ app.post('/api/tickets', async (req, res) => {
        now]
     );
     res.json({ success: true, id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/clothing-check/:workerNumber
+app.get('/api/clothing-check/:workerNumber', async (req, res) => {
+  try {
+    const SIX_MONTHS_MS = 180 * 24 * 60 * 60 * 1000;
+    const result = await pool.query(
+      'SELECT last_issued_at FROM clothing_history WHERE worker_number = $1',
+      [req.params.workerNumber]
+    );
+    if (!result.rows.length) return res.json({ blocked: false });
+    const lastIssuedAt = Number(result.rows[0].last_issued_at);
+    const blocked = lastIssuedAt > 0 && (Date.now() - lastIssuedAt) < SIX_MONTHS_MS;
+    res.json({ blocked, lastIssuedAt });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /api/clothing-history/:workerNumber  (manager override)
+app.delete('/api/clothing-history/:workerNumber', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM clothing_history WHERE worker_number = $1', [req.params.workerNumber]);
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -178,6 +211,18 @@ app.patch('/api/tickets/:id', async (req, res) => {
       values
     );
     if (!result.rows.length) return res.status(404).json({ error: 'Ticket not found' });
+
+    // If resolved a clothing ticket → record issuance date
+    const ticket = result.rows[0];
+    if (status === 'resolved' && ticket.category && ticket.category.toLowerCase().includes('clothing') && ticket.worker_number) {
+      await pool.query(
+        `INSERT INTO clothing_history (worker_number, last_issued_at)
+         VALUES ($1, $2)
+         ON CONFLICT (worker_number) DO UPDATE SET last_issued_at = $2`,
+        [ticket.worker_number, now]
+      ).catch(() => {});
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);

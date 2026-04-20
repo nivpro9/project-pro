@@ -464,6 +464,9 @@ function selectMain(btn) {
   document.querySelectorAll('.apt-btn').forEach(b => b.classList.remove('selected'));
   selectedCategory = '';
   selectedMain = btn.dataset.main;
+  // Remove clothing block banner
+  const bb = document.getElementById('clothingBlockBanner');
+  if (bb) bb.remove();
 
   const sub = document.getElementById('sub-' + selectedMain);
   if (sub) sub.style.display = 'block';
@@ -679,6 +682,42 @@ async function submitForm() {
   }
   selectedPriority = 'regular';
 
+  // 6-month clothing restriction check
+  if (selectedMain === 'clothing') {
+    try {
+      const chkRes = await fetch(`/api/clothing-check/${encodeURIComponent(workerNum)}`);
+      const chkData = await chkRes.json();
+      if (chkData.blocked) {
+        const d = new Date(chkData.lastIssuedAt);
+        const dateStr = d.toLocaleDateString('en-GB'); // DD/MM/YYYY
+        const nextDate = new Date(chkData.lastIssuedAt + 180 * 24 * 60 * 60 * 1000);
+        const nextStr = nextDate.toLocaleDateString('en-GB');
+        showToast(
+          lang === 'hi'
+            ? `⛔ अंतिम हनपकन: ${dateStr} — अगला: ${nextStr}`
+            : `⛔ Last issued: ${dateStr}. Next eligible: ${nextStr}`
+        );
+        // Show a more visible banner below the clothing section
+        const existingBanner = document.getElementById('clothingBlockBanner');
+        if (existingBanner) existingBanner.remove();
+        const banner = document.createElement('div');
+        banner.id = 'clothingBlockBanner';
+        banner.style.cssText = 'background:#fef2f2;border:2px solid #ef4444;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:.88rem;color:#dc2626;font-weight:600;line-height:1.5';
+        banner.innerHTML = lang === 'hi'
+          ? `⛔ <b>अनुरोध अवरुद्ध</b><br>अंतिम हनपकन: <b>${dateStr}</b><br>अगली पात्रता: <b>${nextStr}</b>`
+          : `⛔ <b>Request blocked</b><br>Last clothing issued: <b>${dateStr}</b><br>Next eligible date: <b>${nextStr}</b>`;
+        document.getElementById('sub-clothing').appendChild(banner);
+        btn.disabled = false;
+        btn.textContent = T[lang].submitBtn;
+        return;
+      } else {
+        // Remove block banner if previously shown
+        const b = document.getElementById('clothingBlockBanner');
+        if (b) b.remove();
+      }
+    } catch { /* if check fails, allow submission */ }
+  }
+
   // Mandatory media for apartment only
   if (selectedMain === 'apartment' && !mediaBase64) {
     showToast(t.toastMedia);
@@ -709,7 +748,9 @@ async function submitForm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         workerName: name,
-        workerPhone: `Worker#${workerNum} | Passport:${passport} | Tel:${document.getElementById('workerPhone').value.trim()}`,
+        workerNumber: workerNum,
+        passportNumber: passport,
+        workerPhone: document.getElementById('workerPhone').value.trim(),
         room,
         category: selectedCategory,
         priority: selectedPriority,
@@ -753,6 +794,8 @@ function resetForm() {
   document.getElementById('medBtnDoctor').classList.remove('selected');
   selectedApartmentIssues = [];
   document.querySelectorAll('.apt-btn').forEach(b => b.classList.remove('selected'));
+  const cbb = document.getElementById('clothingBlockBanner');
+  if (cbb) cbb.remove();
   document.getElementById('uploadZone').classList.remove('required-media');
   document.getElementById('mediaRequired').style.display = 'none';
   selectedCategory = ''; selectedMain = ''; selectedPriority = '';
