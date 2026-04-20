@@ -456,9 +456,6 @@ function selectMain(btn) {
   btn.classList.add('selected');
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
-  // Reset medical type
-  document.getElementById('med-doctor-grid').style.display = 'none';
-  document.getElementById('medBtnDoctor').classList.remove('selected');
   // Reset apartment multi-select
   selectedApartmentIssues = [];
   document.querySelectorAll('.apt-btn').forEach(b => b.classList.remove('selected'));
@@ -476,8 +473,6 @@ function selectMain(btn) {
 }
 
 function selectMedType(type) {
-  document.getElementById('medBtnDoctor').classList.toggle('selected', type === 'doctor');
-  document.getElementById('med-doctor-grid').style.display = type === 'doctor' ? 'block' : 'none';
   document.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('selected'));
   selectedCategory = '';
 }
@@ -790,8 +785,6 @@ function resetForm() {
   });
   document.querySelectorAll('.cat-btn,.sub-btn').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
-  document.getElementById('med-doctor-grid').style.display = 'none';
-  document.getElementById('medBtnDoctor').classList.remove('selected');
   selectedApartmentIssues = [];
   document.querySelectorAll('.apt-btn').forEach(b => b.classList.remove('selected'));
   const cbb = document.getElementById('clothingBlockBanner');
