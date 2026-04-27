@@ -134,8 +134,9 @@ app.post('/api/tickets', async (req, res) => {
 app.post('/api/admin/import-clothing', async (req, res) => {
   if (req.headers['x-admin-key'] !== 'pp-import-2026') return res.status(403).json({ error: 'Forbidden' });
   try {
-    const { rows } = req.body; // [{workerId, uniformTs, shoesTs}]
+    const { rows, clearFirst } = req.body; // [{workerId, uniformTs, shoesTs}]
     if (!Array.isArray(rows)) return res.status(400).json({ error: 'Bad data' });
+    if (clearFirst) await pool.query('DELETE FROM clothing_history');
     let count = 0;
     for (const { workerId, uniformTs, shoesTs } of rows) {
       if (!workerId) continue;
@@ -146,8 +147,8 @@ app.post('/api/admin/import-clothing', async (req, res) => {
         `INSERT INTO clothing_history (worker_number, uniform_issued_at, shoes_issued_at)
          VALUES ($1, $2, $3)
          ON CONFLICT (worker_number) DO UPDATE SET
-           uniform_issued_at = GREATEST(clothing_history.uniform_issued_at, $2),
-           shoes_issued_at   = GREATEST(clothing_history.shoes_issued_at, $3)`,
+           uniform_issued_at = $2,
+           shoes_issued_at   = $3`,
         [String(workerId), uTs, sTs]
       );
       count++;
