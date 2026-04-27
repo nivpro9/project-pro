@@ -18,6 +18,21 @@
   .lang-btn:hover{background:#e85d04;border-color:#e85d04;color:#fff}
   .lang-btn span{display:block;font-size:1.6rem;margin-bottom:6px}
 
+  /* Clothing block modal */
+  #clothingModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;align-items:center;justify-content:center;padding:20px}
+  #clothingModal.open{display:flex}
+  #clothingModalBox{background:#fff;border-radius:18px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  #clothingModalHeader{background:#e85d04;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+  #clothingModalHeader h3{color:#fff;font-size:1rem;font-weight:800;margin:0}
+  #clothingModalClose{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;line-height:1;padding:0 2px}
+  #clothingModalBody{padding:20px}
+  #clothingModalBody .modal-item{background:#fff8f0;border:2px solid #fed7aa;border-radius:10px;padding:14px 16px;margin-bottom:12px;line-height:1.8;font-size:.88rem}
+  #clothingModalBody .modal-item:last-of-type{margin-bottom:0}
+  #clothingModalBody .item-title{font-size:1rem;font-weight:800;color:#16213e;margin-bottom:6px}
+  #clothingModalBody .item-note{font-size:.8rem;color:#888;margin-top:8px;border-top:1px solid #fed7aa;padding-top:8px}
+  #clothingModalOk{display:block;width:calc(100% - 40px);margin:16px 20px 20px;background:#16213e;color:#fff;border:none;padding:14px;border-radius:10px;font-size:1rem;font-weight:800;cursor:pointer;text-align:center}
+  #clothingModalOk:hover{background:#e85d04}
+
   /* Header */
   header{background:#16213e;padding:14px 20px;display:flex;flex-direction:column;align-items:center;gap:6px}
   header .titles{text-align:center;color:#fff}
@@ -315,6 +330,18 @@
   </div>
 </div>
 
+<!-- Clothing Block Modal -->
+<div id="clothingModal">
+  <div id="clothingModalBox">
+    <div id="clothingModalHeader">
+      <h3 id="clothingModalTitle">🗓️ Clothing Request</h3>
+      <button id="clothingModalClose" onclick="closeClothingModal()">✕</button>
+    </div>
+    <div id="clothingModalBody"></div>
+    <button id="clothingModalOk" onclick="closeClothingModal()">✅ Got it</button>
+  </div>
+</div>
+
 <script>
 // ── Translations ──────────────────────────────────────
 const T = {
@@ -496,51 +523,48 @@ function toggleApt(btn) {
   updateMediaRequired();
 }
 
-function fmtNextDate(ts) {
-  const next = new Date(ts + 180 * 24 * 60 * 60 * 1000);
-  return next.toLocaleDateString('en-GB');
+function fmtDate(ts) { return new Date(ts).toLocaleDateString('en-GB'); }
+function fmtNext(ts) { return new Date(ts + 180*24*60*60*1000).toLocaleDateString('en-GB'); }
+
+function showClothingModal(blockedItems) {
+  // blockedItems = [{type:'uniform'|'shoes', lastIssuedAt: ts}, ...]
+  const isHi = lang === 'hi';
+  const title = isHi ? '🗓️ कपड़े की नीति' : '🗓️ Clothing Policy';
+  document.getElementById('clothingModalTitle').textContent = title;
+  document.getElementById('clothingModalOk').textContent = isHi ? '✅ समझ गया' : '✅ Got it';
+
+  const body = blockedItems.map(item => {
+    const issuedStr = fmtDate(item.lastIssuedAt);
+    const nextStr   = fmtNext(item.lastIssuedAt);
+    const label = item.type === 'uniform'
+      ? (isHi ? '👕 वर्दी (शर्ट और पैंट)' : '👕 Uniform — Shirt & Pants')
+      : (isHi ? '👟 जूते' : '👟 Shoes');
+    return isHi ? `
+      <div class="modal-item">
+        <div class="item-title">${label}</div>
+        <div>कपड़े हर <b>6 महीने</b> में एक बार मिलते हैं।</div>
+        <div>अंतिम बार मिला: <b style="color:#e85d04">${issuedStr}</b></div>
+        <div>अगली बार मिल सकता है: <b style="color:#16a34a">${nextStr}</b></div>
+        <div class="item-note">अगर आपको तत्काल आवश्यकता है, तो अपने मैनेजर से संपर्क करें।</div>
+      </div>` : `
+      <div class="modal-item">
+        <div class="item-title">${label}</div>
+        <div>Clothing is provided once every <b>6 months</b>.</div>
+        <div>Last issued: <b style="color:#e85d04">${issuedStr}</b></div>
+        <div>You can request again from: <b style="color:#16a34a">${nextStr}</b></div>
+        <div class="item-note">If you have an urgent need, please contact your manager directly.</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('clothingModalBody').innerHTML = body;
+  document.getElementById('clothingModal').classList.add('open');
 }
 
-function showClothingBanner(type, lastIssuedAt) {
-  const bannerId = 'clothingBanner-' + type;
-  const existing = document.getElementById(bannerId);
-  if (existing) existing.remove();
-
-  const issuedStr = new Date(lastIssuedAt).toLocaleDateString('en-GB');
-  const nextStr   = fmtNextDate(lastIssuedAt);
-  const isHi      = lang === 'hi';
-
-  const typeLabel = type === 'uniform'
-    ? (isHi ? 'वर्दी (शर्ट/पैंट)' : 'Uniform (Shirt & Pants)')
-    : (isHi ? 'जूते' : 'Shoes');
-
-  const banner = document.createElement('div');
-  banner.id = bannerId;
-  banner.style.cssText = `
-    background:#fff8f0;border:2px solid #f97316;border-radius:12px;
-    padding:16px 18px;margin-top:12px;line-height:1.7;font-size:.88rem
-  `;
-  banner.innerHTML = isHi ? `
-    <div style="font-size:1.1rem;margin-bottom:6px">🗓️ <b>${typeLabel} – अनुरोध अवरुद्ध</b></div>
-    <div style="color:#555">कपड़े हर <b>6 महीने</b> में एक बार मिलते हैं।</div>
-    <div style="color:#555">अंतिम बार मिला: <b style="color:#e85d04">${issuedStr}</b></div>
-    <div style="color:#555">अगली बार मिल सकता है: <b style="color:#16a34a">${nextStr}</b></div>
-  ` : `
-    <div style="font-size:1.1rem;margin-bottom:6px">🗓️ <b>${typeLabel} – Request Blocked</b></div>
-    <div style="color:#555">Clothing is provided once every <b>6 months</b>.</div>
-    <div style="color:#555">Last issued: <b style="color:#e85d04">${issuedStr}</b></div>
-    <div style="color:#555">You can request again from: <b style="color:#16a34a">${nextStr}</b></div>
-  `;
-
-  document.getElementById('sub-clothing').appendChild(banner);
+function closeClothingModal() {
+  document.getElementById('clothingModal').classList.remove('open');
 }
 
-function clearClothingBanners() {
-  ['uniform','shoes'].forEach(t => {
-    const b = document.getElementById('clothingBanner-' + t);
-    if (b) b.remove();
-  });
-}
+function clearClothingBanners() {} // kept for compatibility
 
 function updateMediaRequired() {
   const req = selectedMain === 'apartment';
@@ -735,19 +759,14 @@ async function submitForm() {
       const wantsShirt = document.getElementById('chk-shirt').checked;
       const wantsShoes = document.getElementById('chk-shoes').checked;
 
-      clearClothingBanners();
-      let anyBlocked = false;
+      const blockedItems = [];
+      if (chk.uniformBlocked && (wantsPants || wantsShirt))
+        blockedItems.push({ type: 'uniform', lastIssuedAt: chk.uniformLastIssuedAt });
+      if (chk.shoesBlocked && wantsShoes)
+        blockedItems.push({ type: 'shoes', lastIssuedAt: chk.shoesLastIssuedAt });
 
-      if (chk.uniformBlocked && (wantsPants || wantsShirt)) {
-        anyBlocked = true;
-        showClothingBanner('uniform', chk.uniformLastIssuedAt);
-      }
-      if (chk.shoesBlocked && wantsShoes) {
-        anyBlocked = true;
-        showClothingBanner('shoes', chk.shoesLastIssuedAt);
-      }
-
-      if (anyBlocked) {
+      if (blockedItems.length) {
+        showClothingModal(blockedItems);
         btn.disabled = false;
         btn.textContent = T[lang].submitBtn;
         return;
