@@ -461,9 +461,7 @@ function selectMain(btn) {
   document.querySelectorAll('.apt-btn').forEach(b => b.classList.remove('selected'));
   selectedCategory = '';
   selectedMain = btn.dataset.main;
-  // Remove clothing block banner
-  const bb = document.getElementById('clothingBlockBanner');
-  if (bb) bb.remove();
+  clearClothingBanners();
 
   const sub = document.getElementById('sub-' + selectedMain);
   if (sub) sub.style.display = 'block';
@@ -496,6 +494,52 @@ function toggleApt(btn) {
   }
   selectedCategory = selectedApartmentIssues.join(' | ');
   updateMediaRequired();
+}
+
+function fmtNextDate(ts) {
+  const next = new Date(ts + 180 * 24 * 60 * 60 * 1000);
+  return next.toLocaleDateString('en-GB');
+}
+
+function showClothingBanner(type, lastIssuedAt) {
+  const bannerId = 'clothingBanner-' + type;
+  const existing = document.getElementById(bannerId);
+  if (existing) existing.remove();
+
+  const issuedStr = new Date(lastIssuedAt).toLocaleDateString('en-GB');
+  const nextStr   = fmtNextDate(lastIssuedAt);
+  const isHi      = lang === 'hi';
+
+  const typeLabel = type === 'uniform'
+    ? (isHi ? 'वर्दी (शर्ट/पैंट)' : 'Uniform (Shirt & Pants)')
+    : (isHi ? 'जूते' : 'Shoes');
+
+  const banner = document.createElement('div');
+  banner.id = bannerId;
+  banner.style.cssText = `
+    background:#fff8f0;border:2px solid #f97316;border-radius:12px;
+    padding:16px 18px;margin-top:12px;line-height:1.7;font-size:.88rem
+  `;
+  banner.innerHTML = isHi ? `
+    <div style="font-size:1.1rem;margin-bottom:6px">🗓️ <b>${typeLabel} – अनुरोध अवरुद्ध</b></div>
+    <div style="color:#555">कपड़े हर <b>6 महीने</b> में एक बार मिलते हैं।</div>
+    <div style="color:#555">अंतिम बार मिला: <b style="color:#e85d04">${issuedStr}</b></div>
+    <div style="color:#555">अगली बार मिल सकता है: <b style="color:#16a34a">${nextStr}</b></div>
+  ` : `
+    <div style="font-size:1.1rem;margin-bottom:6px">🗓️ <b>${typeLabel} – Request Blocked</b></div>
+    <div style="color:#555">Clothing is provided once every <b>6 months</b>.</div>
+    <div style="color:#555">Last issued: <b style="color:#e85d04">${issuedStr}</b></div>
+    <div style="color:#555">You can request again from: <b style="color:#16a34a">${nextStr}</b></div>
+  `;
+
+  document.getElementById('sub-clothing').appendChild(banner);
+}
+
+function clearClothingBanners() {
+  ['uniform','shoes'].forEach(t => {
+    const b = document.getElementById('clothingBanner-' + t);
+    if (b) b.remove();
+  });
 }
 
 function updateMediaRequired() {
@@ -681,38 +725,32 @@ async function submitForm() {
   btn.disabled = true;
   btn.textContent = '...';
 
-  // 6-month clothing restriction check
+  // 6-month clothing restriction check (separate for uniform vs shoes)
   if (selectedMain === 'clothing') {
     try {
       const chkRes = await fetch(`/api/clothing-check/${encodeURIComponent(workerNum)}`);
-      const chkData = await chkRes.json();
-      if (chkData.blocked) {
-        const d = new Date(chkData.lastIssuedAt);
-        const dateStr = d.toLocaleDateString('en-GB'); // DD/MM/YYYY
-        const nextDate = new Date(chkData.lastIssuedAt + 180 * 24 * 60 * 60 * 1000);
-        const nextStr = nextDate.toLocaleDateString('en-GB');
-        showToast(
-          lang === 'hi'
-            ? `⛔ अंतिम हनपकन: ${dateStr} — अगला: ${nextStr}`
-            : `⛔ Last issued: ${dateStr}. Next eligible: ${nextStr}`
-        );
-        // Show a more visible banner below the clothing section
-        const existingBanner = document.getElementById('clothingBlockBanner');
-        if (existingBanner) existingBanner.remove();
-        const banner = document.createElement('div');
-        banner.id = 'clothingBlockBanner';
-        banner.style.cssText = 'background:#fef2f2;border:2px solid #ef4444;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:.88rem;color:#dc2626;font-weight:600;line-height:1.5';
-        banner.innerHTML = lang === 'hi'
-          ? `⛔ <b>अनुरोध अवरुद्ध</b><br>अंतिम हनपकन: <b>${dateStr}</b><br>अगली पात्रता: <b>${nextStr}</b>`
-          : `⛔ <b>Request blocked</b><br>Last clothing issued: <b>${dateStr}</b><br>Next eligible date: <b>${nextStr}</b>`;
-        document.getElementById('sub-clothing').appendChild(banner);
+      const chk = await chkRes.json();
+
+      const wantsPants = document.getElementById('chk-pants').checked;
+      const wantsShirt = document.getElementById('chk-shirt').checked;
+      const wantsShoes = document.getElementById('chk-shoes').checked;
+
+      clearClothingBanners();
+      let anyBlocked = false;
+
+      if (chk.uniformBlocked && (wantsPants || wantsShirt)) {
+        anyBlocked = true;
+        showClothingBanner('uniform', chk.uniformLastIssuedAt);
+      }
+      if (chk.shoesBlocked && wantsShoes) {
+        anyBlocked = true;
+        showClothingBanner('shoes', chk.shoesLastIssuedAt);
+      }
+
+      if (anyBlocked) {
         btn.disabled = false;
         btn.textContent = T[lang].submitBtn;
         return;
-      } else {
-        // Remove block banner if previously shown
-        const b = document.getElementById('clothingBlockBanner');
-        if (b) b.remove();
       }
     } catch { /* if check fails, allow submission */ }
   }
@@ -787,8 +825,7 @@ function resetForm() {
   document.querySelectorAll('.sub-cats').forEach(el => el.style.display = 'none');
   selectedApartmentIssues = [];
   document.querySelectorAll('.apt-btn').forEach(b => b.classList.remove('selected'));
-  const cbb = document.getElementById('clothingBlockBanner');
-  if (cbb) cbb.remove();
+  clearClothingBanners();
   document.getElementById('uploadZone').classList.remove('required-media');
   document.getElementById('mediaRequired').style.display = 'none';
   selectedCategory = ''; selectedMain = ''; selectedPriority = '';

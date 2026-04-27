@@ -58,8 +58,9 @@ async function initDB() {
     );
     INSERT INTO counter (id, value) VALUES (1, 0) ON CONFLICT DO NOTHING;
     CREATE TABLE IF NOT EXISTS clothing_history (
-      worker_number TEXT PRIMARY KEY,
-      last_issued_at BIGINT DEFAULT 0
+      worker_number    TEXT PRIMARY KEY,
+      uniform_issued_at BIGINT DEFAULT 0,
+      shoes_issued_at   BIGINT DEFAULT 0
     );
   `);
 
@@ -77,6 +78,15 @@ async function initDB() {
   for (const [col, type] of cols) {
     await pool.query(`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ${col} ${type}`).catch(()=>{});
   }
+  // Migrate clothing_history to separate columns
+  await pool.query(`ALTER TABLE clothing_history ADD COLUMN IF NOT EXISTS uniform_issued_at BIGINT DEFAULT 0`).catch(()=>{});
+  await pool.query(`ALTER TABLE clothing_history ADD COLUMN IF NOT EXISTS shoes_issued_at   BIGINT DEFAULT 0`).catch(()=>{});
+  // Migrate old last_issued_at → both columns if they're still 0
+  await pool.query(`
+    UPDATE clothing_history
+    SET uniform_issued_at = last_issued_at, shoes_issued_at = last_issued_at
+    WHERE last_issued_at > 0 AND uniform_issued_at = 0 AND shoes_issued_at = 0
+  `).catch(()=>{});
 
   console.log('✅ Database ready');
 }
@@ -124,16 +134,21 @@ app.post('/api/tickets', async (req, res) => {
 app.post('/api/admin/import-clothing', async (req, res) => {
   if (req.headers['x-admin-key'] !== 'pp-import-2026') return res.status(403).json({ error: 'Forbidden' });
   try {
-    const { rows } = req.body; // [{workerId, lastTs}]
+    const { rows } = req.body; // [{workerId, uniformTs, shoesTs}]
     if (!Array.isArray(rows)) return res.status(400).json({ error: 'Bad data' });
     let count = 0;
-    for (const { workerId, lastTs } of rows) {
-      if (!workerId || !lastTs) continue;
+    for (const { workerId, uniformTs, shoesTs } of rows) {
+      if (!workerId) continue;
+      const uTs = Number(uniformTs) || 0;
+      const sTs = Number(shoesTs)   || 0;
+      if (!uTs && !sTs) continue;
       await pool.query(
-        `INSERT INTO clothing_history (worker_number, last_issued_at)
-         VALUES ($1, $2)
-         ON CONFLICT (worker_number) DO UPDATE SET last_issued_at = GREATEST(clothing_history.last_issued_at, $2)`,
-        [String(workerId), Number(lastTs)]
+        `INSERT INTO clothing_history (worker_number, uniform_issued_at, shoes_issued_at)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (worker_number) DO UPDATE SET
+           uniform_issued_at = GREATEST(clothing_history.uniform_issued_at, $2),
+           shoes_issued_at   = GREATEST(clothing_history.shoes_issued_at, $3)`,
+        [String(workerId), uTs, sTs]
       );
       count++;
     }
@@ -147,15 +162,21 @@ app.post('/api/admin/import-clothing', async (req, res) => {
 // GET /api/clothing-check/:workerNumber
 app.get('/api/clothing-check/:workerNumber', async (req, res) => {
   try {
-    const SIX_MONTHS_MS = 180 * 24 * 60 * 60 * 1000;
+    const SIX = 180 * 24 * 60 * 60 * 1000;
+    const now  = Date.now();
     const result = await pool.query(
-      'SELECT last_issued_at FROM clothing_history WHERE worker_number = $1',
+      'SELECT uniform_issued_at, shoes_issued_at FROM clothing_history WHERE worker_number = $1',
       [req.params.workerNumber]
     );
-    if (!result.rows.length) return res.json({ blocked: false });
-    const lastIssuedAt = Number(result.rows[0].last_issued_at);
-    const blocked = lastIssuedAt > 0 && (Date.now() - lastIssuedAt) < SIX_MONTHS_MS;
-    res.json({ blocked, lastIssuedAt });
+    if (!result.rows.length) return res.json({ uniformBlocked: false, shoesBlocked: false });
+    const uTs = Number(result.rows[0].uniform_issued_at) || 0;
+    const sTs = Number(result.rows[0].shoes_issued_at)   || 0;
+    res.json({
+      uniformBlocked:      uTs > 0 && (now - uTs) < SIX,
+      uniformLastIssuedAt: uTs,
+      shoesBlocked:        sTs > 0 && (now - sTs) < SIX,
+      shoesLastIssuedAt:   sTs
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -238,14 +259,23 @@ app.patch('/api/tickets/:id', async (req, res) => {
     );
     if (!result.rows.length) return res.status(404).json({ error: 'Ticket not found' });
 
-    // If resolved a clothing ticket → record issuance date
+    // If resolved a clothing ticket → record issuance date per item type
     const ticket = result.rows[0];
     if (status === 'resolved' && ticket.category && ticket.category.toLowerCase().includes('clothing') && ticket.worker_number) {
+      const desc = (ticket.description || '').toLowerCase();
+      const hasUniform = desc.includes('pants') || desc.includes('shirt');
+      const hasShoes   = desc.includes('shoes');
+      // If nothing detected, assume both
+      const doUniform  = hasUniform || (!hasUniform && !hasShoes);
+      const doShoes    = hasShoes   || (!hasUniform && !hasShoes);
+      const setClauses = [];
+      if (doUniform) setClauses.push(`uniform_issued_at = ${now}`);
+      if (doShoes)   setClauses.push(`shoes_issued_at = ${now}`);
       await pool.query(
-        `INSERT INTO clothing_history (worker_number, last_issued_at)
-         VALUES ($1, $2)
-         ON CONFLICT (worker_number) DO UPDATE SET last_issued_at = $2`,
-        [ticket.worker_number, now]
+        `INSERT INTO clothing_history (worker_number, uniform_issued_at, shoes_issued_at)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (worker_number) DO UPDATE SET ${setClauses.join(', ')}`,
+        [ticket.worker_number, doUniform ? now : 0, doShoes ? now : 0]
       ).catch(() => {});
     }
 
