@@ -120,6 +120,30 @@ app.post('/api/tickets', async (req, res) => {
   }
 });
 
+// POST /api/admin/import-clothing  (one-time import, protected by key)
+app.post('/api/admin/import-clothing', async (req, res) => {
+  if (req.headers['x-admin-key'] !== 'pp-import-2026') return res.status(403).json({ error: 'Forbidden' });
+  try {
+    const { rows } = req.body; // [{workerId, lastTs}]
+    if (!Array.isArray(rows)) return res.status(400).json({ error: 'Bad data' });
+    let count = 0;
+    for (const { workerId, lastTs } of rows) {
+      if (!workerId || !lastTs) continue;
+      await pool.query(
+        `INSERT INTO clothing_history (worker_number, last_issued_at)
+         VALUES ($1, $2)
+         ON CONFLICT (worker_number) DO UPDATE SET last_issued_at = GREATEST(clothing_history.last_issued_at, $2)`,
+        [String(workerId), Number(lastTs)]
+      );
+      count++;
+    }
+    res.json({ success: true, imported: count });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET /api/clothing-check/:workerNumber
 app.get('/api/clothing-check/:workerNumber', async (req, res) => {
   try {
