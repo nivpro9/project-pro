@@ -778,13 +778,20 @@ async function submitForm() {
   if (selectedMain === 'apartment' && !mediaBase64) {
     showToast(t.toastMedia);
     document.getElementById('uploadZone').classList.add('required-media');
+    btn.disabled = false;
+    btn.textContent = T[lang].submitBtn;
     return;
   }
 
   // Clothing: at least one item
   if (selectedMain === 'clothing') {
     const anyChecked = ['pants','shirt','shoes'].some(i => document.getElementById('chk-' + i).checked);
-    if (!anyChecked) { showToast(t.toastClothing); return; }
+    if (!anyChecked) {
+      showToast(t.toastClothing);
+      btn.disabled = false;
+      btn.textContent = T[lang].submitBtn;
+      return;
+    }
   }
 
   let description = '';

@@ -580,18 +580,31 @@ function openModal(id) {
       .then(chk => {
         const banner = document.getElementById('clothingHistoryBanner');
         if (!banner) return;
-        if (chk.lastIssuedAt && chk.lastIssuedAt > 0) {
-          const d = new Date(chk.lastIssuedAt).toLocaleString();
-          const blocked = chk.blocked;
-          banner.style.display = 'block';
-          banner.innerHTML = blocked
-            ? `<span style="color:#dc2626">⛔ Last issued: <b>${d}</b> — worker is currently blocked (6 months not passed)</span>
-               <button onclick="resetClothingBlock('${workerNum}')" style="margin-left:10px;background:#ef4444;color:#fff;border:none;padding:4px 12px;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer">Override block</button>`
-            : `<span style="color:#16a34a">✅ Last issued: <b>${d}</b> — eligible for new clothing</span>`;
-        } else {
+        const uTs = chk.uniformLastIssuedAt || 0;
+        const sTs = chk.shoesLastIssuedAt   || 0;
+        if (!uTs && !sTs) {
           banner.style.display = 'block';
           banner.innerHTML = `<span style="color:#888">📋 No previous clothing issuance on record</span>`;
+          return;
         }
+        const fmtD = ts => ts > 0 ? new Date(ts).toLocaleDateString('en-GB') : '—';
+        const uBlocked = chk.uniformBlocked, sBlocked = chk.shoesBlocked;
+        let html = '';
+        if (uTs > 0) {
+          const col = uBlocked ? '#dc2626' : '#16a34a';
+          const icon = uBlocked ? '⛔' : '✅';
+          html += `<div style="margin-bottom:4px"><span style="color:${col}">${icon} Uniform: <b>${fmtD(uTs)}</b>${uBlocked ? ' — blocked' : ' — eligible'}</span></div>`;
+        }
+        if (sTs > 0) {
+          const col = sBlocked ? '#dc2626' : '#16a34a';
+          const icon = sBlocked ? '⛔' : '✅';
+          html += `<div><span style="color:${col}">${icon} Shoes: <b>${fmtD(sTs)}</b>${sBlocked ? ' — blocked' : ' — eligible'}</span></div>`;
+        }
+        if (uBlocked || sBlocked) {
+          html += `<button onclick="resetClothingBlock('${workerNum}')" style="margin-top:8px;background:#ef4444;color:#fff;border:none;padding:4px 12px;border-radius:6px;font-size:.78rem;font-weight:700;cursor:pointer">Override block</button>`;
+        }
+        banner.style.display = 'block';
+        banner.innerHTML = html;
       }).catch(() => {});
   }
 
