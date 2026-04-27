@@ -677,6 +677,10 @@ async function submitForm() {
   }
   selectedPriority = 'regular';
 
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
   // 6-month clothing restriction check
   if (selectedMain === 'clothing') {
     try {
@@ -732,10 +736,6 @@ async function submitForm() {
   } else {
     description = selectedCategory;
   }
-
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = '...';
 
   try {
     const res = await fetch('/api/tickets', {
